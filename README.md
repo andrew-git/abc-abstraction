@@ -1,10 +1,10 @@
 # An AS3 Library for ABC Manipulation
 
-ActionScript Bytecode / Action Block Code is the bytecode format used by AVM+, aka Tamarin, aka AVM2, aka avmplus, part of Flash Player, Red Tamarin, and probably a number of other runtimes.  
+ActionScript bytecode is the bytecode format used by AVM+ aka Tamarin aka AVM2 aka avmplus, part of Flash Player, Red Tamarin, and probably a number of other runtimes.  
 
 ## It's only natural…
 
-…that there'd be an AS3 library to manipulate its compiled form.  In fact, there are at least 4-5 of these around the web, with various capabilities.  This one was started before some of them, but it probably wasn't the first.  It is, however, the only one that I've written.  Most of the original development was done in a semi-private Mercurial repository which is available on request.
+…that there'd be an AS3 library to manipulate its compiled form.  In fact, there are at least 4-5 of these around the web, with various capabilities.  This one was started before some of them, but it probably wasn't the first.  It is, however, the only one that I've written.  Most of the original development was done during the spring and summer of 2010 in a semi-private Mercurial repository which is available upon request.
 
 ## Overview
 
@@ -32,6 +32,12 @@ var new_bytes:ByteArray = _swf.toByteArray()
 (addChild(new Loader()) as Loader).loadBytes(new_bytes) // this loads the SWF with modified bytecode
 
 ```
+
+## Bugs?
+
+Probably.  In a straight read-in, write-out pass, it's unlikely that anything will break.  You're responsible for getting your code past the Flash Player verifier, because this library doesn't do any verification itself.  
+
+Some things that are currently especially untested include the auto-calculated max_scope_depth, max_stack, and local_count fields of a MethodBodyInfo.  The good thing about this fragility is that you don't have to calculate these values yourself.  
 
 ## Thanks to…
 
