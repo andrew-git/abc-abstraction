@@ -16,7 +16,7 @@ All of the files in the root directory are essentially examples, although I have
 
 In general, though typical usage might look like this: 
 
-```
+```actionscript
 var swfData:ByteArray = urlLoader.data as ByteArray // these are the bytes of an SWF
 var _swf:SWF = SWF.readFrom(swfData)
 for each(var t:Tag in _swf.tags){ // there might only be one DoABCTag per file, or tons of them!
