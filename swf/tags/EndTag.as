@@ -1,11 +1,11 @@
 package swf.tags {
-	import swf.SWFReader;
+	import swf.SWFReader
 	
-	import flash.utils.ByteArray;
+	import flash.utils.ByteArray
 
 	public class EndTag extends ControlTag {
 		public function EndTag(){
-			super(Tag.End);
+			super(Tag.End)
 		}
 		
 		override public function readFrom(reader:SWFReader, length:uint):void {
@@ -13,7 +13,7 @@ package swf.tags {
 		}
 		
 		override public function toByteArray():ByteArray {
-			return new ByteArray();
+			return new ByteArray
 		}
 	}
 }

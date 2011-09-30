@@ -1,210 +1,210 @@
 package abc {
 	public class Instruction {
 		public var	opcode:int,
-					operands:Array;
+					operands:Array
 					
-		public var used:Boolean = false;
+		public var used:Boolean = false
 					
 		public function Instruction(opcode:int, operands:Array = null){
-			this.opcode = opcode;
-			this.operands = operands;
+			this.opcode = opcode
+			this.operands = operands
 		}
 		
 		public function toString():String {
-			var s:String = opcodes[opcode].name;
+			var s:String = opcodes[opcode].name
 			if(operands){
-				s += '\t' + operands.join(', ');
+				s += '\t' + operands.join(', ')
 			}
-			return s;
+			return s
 		}
 		
 		private static function generateOpcodeArray():Array {
-			var arr:Array = new Array(opcodeList.length);
-			var len:int = opcodeList.length;
+			var arr:Array = new Array(opcodeList.length)
+			var len:int = opcodeList.length
 			for(var i:int = 0; i < len; i++){
-				arr[opcodeList[i].opcode] = opcodeList[i];
+				arr[opcodeList[i].opcode] = opcodeList[i]
 			}
-			return arr;
+			return arr
 		}
 		
 		private static var registerInstructions:Array = [
 			0x94, 0xc3, 0x08, 0x92, 0xc2, 0x32, 0x63, 0xd4, 0xd5, 0xd6, 0xd7, 
 			0x62, 0xd0, 0xd1, 0xd2, 0xd3, 0xef
-		];
+		]
 		
 		public function get register():uint {
-			if(registerInstructions.indexOf(opcode) == -1) return 0;
+			if(registerInstructions.indexOf(opcode) == -1) return 0
 			
 			switch(opcode){
 				case Op.declocal:	case Op.declocal_i:
 				case Op.kill: 		case Op.inclocal:
 				case Op.inclocal_i:	case Op.setlocal:
 				case Op.getlocal:
-					return operands[0];
-					break;
+					return operands[0]
+					break
 				case Op.hasnext2:
-					return Math.max(operands[0], operands[1]);
-					break;
+					return Math.max(operands[0], operands[1])
+					break
 				case Op.debug:
 					if(operands[0] == 1){ // TODO: make enum for debug values
-						return operands[2];
+						return operands[2]
 					} else {
-						return 0;
+						return 0
 					}
-					break;
+					break
 				case Op.getlocal0:	case Op.setlocal0:
-					return 0;
-					break;
+					return 0
+					break
 				case Op.getlocal1:	case Op.setlocal1:
-					return 1;
-					break;
+					return 1
+					break
 				case Op.getlocal2:	case Op.setlocal2:
-					return 2;
-					break;
+					return 2
+					break
 				case Op.getlocal3:	case Op.setlocal3:
-					return 3;
-					break;
+					return 3
+					break
 			}
-			return 0;
+			return 0
 		}
 		
 		public function get scopeEffect():int {
-			return opcodes[opcode].scope;
+			return opcodes[opcode].scope
 		}
 		
 		public function get stackEffect():int {
-			if(variableStack.indexOf(opcode) == -1) return opcodes[opcode].stack;
+			if(variableStack.indexOf(opcode) == -1) return opcodes[opcode].stack
 			
 			// otherwise, the stack size change is dependent on the operation's arguments
 			switch(opcode){
 				case Op.call:
-					return -(2 + operands[0] - 1); // function, receiver, [n args] => value
-					break;
+					return -(2 + operands[0] - 1) // function, receiver, [n args] => value
+					break
 				case Op.callmethod:
 				case Op.callstatic:
-					return -operands[1];
-					break;
+					return -operands[1]
+					break
 				case Op.callproperty:
 				case Op.callproplex:
 				case Op.callsuper:
 				case Op.constructprop:
-					var mn:Multiname = operands[0];
-					var arg_count:int = operands[1];
+					var mn:Multiname = operands[0]
+					var arg_count:int = operands[1]
 					switch(mn.kind){
 						case Multiname.QName:
-							return -arg_count;
-							break;
+							return -arg_count
+							break
 						case Multiname.RTQName:
 						case Multiname.Multiname:
-							return -(arg_count + 1);
-							break;
+							return -(arg_count + 1)
+							break
 						case Multiname.RTQNameL:
 						case Multiname.MultinameL:
-							return -(arg_count + 2);
-							break;
+							return -(arg_count + 2)
+							break
 						default:
-							throw new Error('Unhandled multiname stack effect request', 1491);
+							throw new Error('Unhandled multiname stack effect request', 1491)
 					}
 				
 				case Op.callpropvoid:
 				case Op.callsupervoid:
-					mn = operands[0];
-					arg_count = operands[1];
+					mn = operands[0]
+					arg_count = operands[1]
 					switch(mn.kind){
 						case Multiname.QName:
-							return -(arg_count + 1);
-							break;
+							return -(arg_count + 1)
+							break
 						case Multiname.RTQName:
 						case Multiname.Multiname:
-							return -(arg_count + 2);
-							break;
+							return -(arg_count + 2)
+							break
 						case Multiname.RTQNameL:
 						case Multiname.MultinameL:
-							return -(arg_count + 3);
-							break;
+							return -(arg_count + 3)
+							break
 						default:
-							throw new Error('unhandled multiname stack effect', 1491);
+							throw new Error('unhandled multiname stack effect', 1491)
 					}
-					break;
+					break
 				case Op.construct:
-					return -operands[0];
-					break;
+					return -operands[0]
+					break
 				case Op.constructsuper:
-					return -(operands[0] + 1);
-					break;
+					return -(operands[0] + 1)
+					break
 				case Op.deleteproperty:
 				case Op.getdescendants:
 				case Op.getproperty:
 				case Op.getsuper:
-					mn = operands[0];
+					mn = operands[0]
 					switch(mn.kind){
 						case Multiname.QName:
-							return 0;
-							break;
+							return 0
+							break
 						case Multiname.RTQName:
 						case Multiname.Multiname:
-							return -1;
-							break;
+							return -1
+							break
 						case Multiname.RTQNameL:
 						case Multiname.MultinameL:
-							return -2;
-							break;
+							return -2
+							break
 						default:
-							throw new Error('unhandled multiname stack effect:' + mn.kind.toString(16), 1491);
+							throw new Error('unhandled multiname stack effect:' + mn.kind.toString(16), 1491)
 					}
-					break;
+					break
 				case Op.findproperty:
 				case Op.findpropstrict:
-					mn = operands[0];
+					mn = operands[0]
 					switch(mn.kind){
 						case Multiname.QName:
-							return 1;
-							break;
+							return 1
+							break
 						case Multiname.RTQName:
 						case Multiname.Multiname:
-							return 0;
-							break;
+							return 0
+							break
 						case Multiname.RTQNameL:
 						case Multiname.MultinameL:
-							return -1;
-							break;
+							return -1
+							break
 						default:
-							throw new Error('hmm', 1491);
+							throw new Error('hmm', 1491)
 					}
-					break;
+					break
 				case Op.initproperty:
 				case Op.setproperty:
 				case Op.setsuper:
-					mn = operands[0];
+					mn = operands[0]
 					switch(mn.kind){
 						case Multiname.QName:
-							return -2;
-							break;
+							return -2
+							break
 						case Multiname.RTQName:
 						case Multiname.Multiname:
-							return -3;
-							break;
+							return -3
+							break
 						case Multiname.RTQNameL:
 						case Multiname.MultinameL:
-							return -4;
-							break;
+							return -4
+							break
 						default:
-							throw new Error('hmmm', 1491);
+							throw new Error('hmmm', 1491)
 					}
 				case Op.newarray:
-					return -(operands[0] - 1);
-					break;
+					return -(operands[0] - 1)
+					break
 				case Op.newobject:
-					return -(2 * operands[0] - 1);
-					break;
+					return -(2 * operands[0] - 1)
+					break
 			}
-			return 0;
+			return 0
 		}
 		
 		public static var variableStack:Array = [	
 			0x41, 0x43, 0x46, 0x4c, 0x4f, 0x44, 0x45, 0x4e, 0x42, 0x4a, 0x49,
 			0x6a, 0x5e, 0x5d, 0x59, 0x66, 0x4, 0x56, 0x55, 0x61, 0x5
-		];
+		]
 		
 		
 		public static var opcodeList:Array = [
@@ -353,8 +353,8 @@ package abc {
 			{ name: 'urshift',					opcode: 0xa7, operands: 0, stack: -1, scope:  0 },
 			
 			{ name: 'applytype',				opcode: 0x53, operands: 1, stack:  0, scope:  0 } // TODO: this
-		];
+		]
 				
-		public static var opcodes:Array = generateOpcodeArray();
+		public static var opcodes:Array = generateOpcodeArray()
 	}
 }

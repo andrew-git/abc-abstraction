@@ -1,34 +1,34 @@
 package abc {
-	import flash.utils.*;
-	import abc.traits.*;
+	import flash.utils.*
+	import abc.traits.*
 	
 	/**
 	 * Encodes an ABC instance as a ByteArray.
 	 */
 	public class ABCWriter {
-		private var _abc:ABC;
-		private var _bytes:ByteArray;
+		private var _abc:ABC
+		private var _bytes:ByteArray
 		
 		private var	_estObjs:Dictionary = new Dictionary(true),
 					_estInts:Array = [],
 					_estUints:Array = [],
 					_estDoubles:Array = [],
-					_estStrings:Object = {};
+					_estStrings:Object = {}
 		
 		public function ABCWriter(abc:ABC){
-			_abc = abc;
+			_abc = abc
 		}
 		
 		public function toByteArray():ByteArray {
-			_establish();
-			_reconcile();
-			_write();
-			return _bytes;
+			_establish()
+			_reconcile()
+			_write()
+			return _bytes
 		}
 		
 		public static function writeABC(abc:ABC):ByteArray {
-			var w:ABCWriter = new ABCWriter(abc);
-			return w.toByteArray();
+			var w:ABCWriter = new ABCWriter(abc)
+			return w.toByteArray()
 		}
 		
 		/**
@@ -36,46 +36,46 @@ package abc {
 		 * weren't in the original SWF (probably because they were added via code).
 		 */
 		private function _reconcile():void {
-			_reconcileArray(_abc.int_pool, _estInts);
-			_reconcileArray(_abc.uint_pool, _estUints);
-			_reconcileArray(_abc.double_pool, _estDoubles);
+			_reconcileArray(_abc.int_pool, _estInts)
+			_reconcileArray(_abc.uint_pool, _estUints)
+			_reconcileArray(_abc.double_pool, _estDoubles)
 			
 			// reconcile string pool
 			for each(var s:String in _estStrings){
 				if(_abc.string_pool.indexOf(s) == -1 && s != null){
-					_abc.string_pool.push(s);
+					_abc.string_pool.push(s)
 				}
 			}
 			
 			// reconcile objects
-			var pool:Array;
+			var pool:Array
 			for each(var o:* in _estObjs){
 				if(o is ABCNamespace){
-					pool = _abc.namespace_pool;
+					pool = _abc.namespace_pool
 				} else if(o is Array && o[0] is ABCNamespace){ // NSSet
-					pool = _abc.ns_set_pool;
+					pool = _abc.ns_set_pool
 				} else if(o is Multiname){
-					pool = _abc.multiname_pool;
+					pool = _abc.multiname_pool
 				} else if(o is MethodInfo){
-					pool = _abc.method_info_pool;
+					pool = _abc.method_info_pool
 				} else if(o is Metadata){
-					pool = _abc.metadata_pool;
+					pool = _abc.metadata_pool
 				} else if(o is InstanceInfo){
-					pool = _abc.instance_info_pool;
+					pool = _abc.instance_info_pool
 				} else if(o is ClassInfo){
-					pool = _abc.class_info_pool;
+					pool = _abc.class_info_pool
 				} else if(o is ScriptInfo){
-					pool = _abc.script_info_pool;
+					pool = _abc.script_info_pool
 				} else if(o is MethodBodyInfo){
-					pool = _abc.method_body_info_pool;
+					pool = _abc.method_body_info_pool
 				} else if(o is Instruction || o is Exception || o is Trait || o is Array){
-					continue;
+					continue
 				} else {
-					throw new Error('Unexpected reconciliation type: ' + o);
+					throw new Error('Unexpected reconciliation type: ' + o)
 				}
 				
 				if(pool && pool.indexOf(o) == -1){
-					pool.push(o);
+					pool.push(o)
 				}
 			}
 		}
@@ -83,7 +83,7 @@ package abc {
 		private function _reconcileArray(pool:Array, vals:Array):void {
 			for each(var o:* in vals){
 				if(pool.indexOf(o) == -1){
-					pool.push(o);
+					pool.push(o)
 				}
 			}
 		}
@@ -95,121 +95,121 @@ package abc {
 		 * to a particular ABC instance.
 		 */ 
 		private function _establish():void {
-			var len:int = _abc.method_body_info_pool.length;
+			var len:int = _abc.method_body_info_pool.length
 			for(var i:int = 0; i < len; i++){
-				_establishMethodBodyInfo(_abc.method_body_info_pool[i]);
+				_establishMethodBodyInfo(_abc.method_body_info_pool[i])
 			}
 			
-			len = _abc.script_info_pool.length;
+			len = _abc.script_info_pool.length
 			for(i = 0; i < len; i++){
-				_establishScriptInfo(_abc.script_info_pool[i]);
+				_establishScriptInfo(_abc.script_info_pool[i])
 			}
 			
-			len = _abc.class_info_pool.length;
+			len = _abc.class_info_pool.length
 			for(i = 0; i < len; i++){
-				_establishClassInfo(_abc.class_info_pool[i]);
+				_establishClassInfo(_abc.class_info_pool[i])
 			}
 			
-			len = _abc.instance_info_pool.length;
+			len = _abc.instance_info_pool.length
 			for(i = 0; i < len; i++){
-				_establishInstanceInfo(_abc.instance_info_pool[i]);
+				_establishInstanceInfo(_abc.instance_info_pool[i])
 			}
 			
-			len = _abc.metadata_pool.length;
+			len = _abc.metadata_pool.length
 			for(i = 0; i < len; i++){
-				_establishMetadata(_abc.metadata_pool[i]);
+				_establishMetadata(_abc.metadata_pool[i])
 			}
 			
-			len = _abc.method_info_pool.length;
+			len = _abc.method_info_pool.length
 			for(i = 0; i < len; i++){
-				_establishMethodInfo(_abc.method_info_pool[i]);
+				_establishMethodInfo(_abc.method_info_pool[i])
 			}
 		}
 		
 		private function _establishTraits(ts:Array):void {
-			if(_estObjs[ts]) return;
-			_estObjs[ts] = ts;
+			if(_estObjs[ts]) return
+			_estObjs[ts] = ts
 			
-			var len:int = ts.length;
+			var len:int = ts.length
 			for(var i:int = 0; i < len; i++){
-				_establishTrait(ts[i]);
+				_establishTrait(ts[i])
 			}
 		}
 		
 		private function _establishTrait(t:Trait):void {
-			if(_estObjs[t]) return;
-			_estObjs[t] = t;
+			if(_estObjs[t]) return
+			_estObjs[t] = t
 			
-			_establishMultiname(t.name);
+			_establishMultiname(t.name)
 			switch(t.type){
 				case Trait.Slot:
 				case Trait.Const:
 					// it's not worth casting these...
-					_establishMultiname(t['type_name']);
+					_establishMultiname(t['type_name'])
 					
-					_establishValFromPool(t['value_kind'], t['value']);
-					break;
+					_establishValFromPool(t['value_kind'], t['value'])
+					break
 				
 				case Trait.Class:
-					_establishClassInfo(t['class_info']);
-					break;
+					_establishClassInfo(t['class_info'])
+					break
 				
 				case Trait.Function:
-					_establishMethodInfo(t['function_info']);
-					break;
+					_establishMethodInfo(t['function_info'])
+					break
 				
 				case Trait.Method:
 				case Trait.Getter:
 				case Trait.Setter:
-					_establishMethodInfo(t['method']);
-					break;
+					_establishMethodInfo(t['method'])
+					break
 				
 				default:
-					throw new VerifyError('Unknown trait type encountered: ' + t.type);
+					throw new VerifyError('Unknown trait type encountered: ' + t.type)
 			}
 			
 			if(t.attr & Trait.Metadata){
-				var len:int = t.metadata.length;
+				var len:int = t.metadata.length
 				if(len){
 					for(var i:int = 0; i < len; i++){
-						_establishMetadata(t.metadata[i]);
+						_establishMetadata(t.metadata[i])
 					}
 				}
 			}
 		}
 		
 		private function _establishMetadata(m:Metadata):void {
-			if(_estObjs[m]) return;
-			_estObjs[m] = m;
+			if(_estObjs[m]) return
+			_estObjs[m] = m
 			
-			_establishString(m.name);
-			var len:int = m.data.length;
+			_establishString(m.name)
+			var len:int = m.data.length
 			for(var i:int = 0; i < len; i++){
 				if(m.data[i]){
-					_establishString(m.data[i].key);
-					_establishString(m.data[i].value);
+					_establishString(m.data[i].key)
+					_establishString(m.data[i].value)
 				}
 			}
 		}
 		
 		private function _establishValFromPool(kind:int, val:*):void {
-			var val:*;
+			var val:*
 			switch(kind){
 				case ABC.Int:
-					_establishInt(val);
-					break;
+					_establishInt(val)
+					break
 				
 				case ABC.UInt:
-					_establishUint(val);
-					break;
+					_establishUint(val)
+					break
 				
 				case ABC.Double:
-					_establishDouble(val);
-					break;
+					_establishDouble(val)
+					break
 				
 				case ABC.Utf8:
-					_establishString(val);
-					break;
+					_establishString(val)
+					break
 				
 				case ABC.Namespace:
 				case ABC.PackageNamespace:
@@ -218,8 +218,8 @@ package abc {
 				case ABC.ExplicitNamespace:
 				case ABC.StaticProtectedNs:
 				case ABC.PrivateNs:
-					_establishNamespace(val);
-					break;
+					_establishNamespace(val)
+					break
 				
 				default:
 					// it's some type that doesn't need to be established
@@ -227,116 +227,116 @@ package abc {
 		}
 		
 		private function _establishInstanceInfo(ii:InstanceInfo):void {
-			if(_estObjs[ii]) return;
-			_estObjs[ii] = ii;
+			if(_estObjs[ii]) return
+			_estObjs[ii] = ii
 			
-			_establishMultiname(ii.name);
-			_establishMultiname(ii.super_name);
+			_establishMultiname(ii.name)
+			_establishMultiname(ii.super_name)
 			
-			if(ii.protectedNs) _establishNamespace(ii.protectedNs);
+			if(ii.protectedNs) _establishNamespace(ii.protectedNs)
 			
-			var len:int = ii.interfaces.length;
+			var len:int = ii.interfaces.length
 			for(var i:int = 0; i < len; i++){
-				_establishMultiname(ii.interfaces[i]);
+				_establishMultiname(ii.interfaces[i])
 			}
 			
-			_establishMethodInfo(ii.iinit);
-			_establishTraits(ii.traits);
+			_establishMethodInfo(ii.iinit)
+			_establishTraits(ii.traits)
 		}
 		
 		private function _establishClassInfo(ci:ClassInfo):void {
-			if(_estObjs[ci]) return;
-			_estObjs[ci] = ci;
+			if(_estObjs[ci]) return
+			_estObjs[ci] = ci
 			
-			_establishMethodInfo(ci.cinit);
-			_establishTraits(ci.traits);
+			_establishMethodInfo(ci.cinit)
+			_establishTraits(ci.traits)
 		}
 		
 		private function _establishScriptInfo(si:ScriptInfo):void {
-			if(_estObjs[si]) return;
-			_estObjs[si] = si;
+			if(_estObjs[si]) return
+			_estObjs[si] = si
 			
-			_establishMethodInfo(si.init);
-			_establishTraits(si.traits);
+			_establishMethodInfo(si.init)
+			_establishTraits(si.traits)
 		}
 		
 		private function _establishMethodBodyInfo(mbi:MethodBodyInfo):void {
-			if(_estObjs[mbi]) return;
-			_estObjs[mbi] = mbi;
+			if(_estObjs[mbi]) return
+			_estObjs[mbi] = mbi
 			
-			_establishMethodInfo(mbi.method);
-			var code:Array = mbi.code;
-			var len:int = code.length;
+			_establishMethodInfo(mbi.method)
+			var code:Array = mbi.code
+			var len:int = code.length
 			for(var i:int = 0; i < len; i++){
-				_establishInstruction(code[i]);
+				_establishInstruction(code[i])
 			}
 			
-			var exceptions:Array = mbi.exceptions;
-			len = exceptions.length;
+			var exceptions:Array = mbi.exceptions
+			len = exceptions.length
 			for(i = 0; i < len; i++){
-				_establishException(exceptions[i]);
+				_establishException(exceptions[i])
 			}
 			
-			_establishTraits(mbi.traits);
+			_establishTraits(mbi.traits)
 		}
 		
 		private function _establishMethodInfo(mi:MethodInfo):void {
-			if(_estObjs[mi]) return;
-			_estObjs[mi] = mi;
+			if(_estObjs[mi]) return
+			_estObjs[mi] = mi
 			
-			_establishMultiname(mi.returnType);
+			_establishMultiname(mi.returnType)
 			
-			var len:int = mi.paramTypes.length;
+			var len:int = mi.paramTypes.length
 			for(var i:int = 0; i < len; i++){
-				_establishMultiname(mi.paramTypes[i]);
+				_establishMultiname(mi.paramTypes[i])
 			}
 			
-			_establishString(mi.name);
+			_establishString(mi.name)
 			
 			if(MethodInfo.hasOptionalFlag(mi.flags)){
-				len = mi.defaultValues.length;
+				len = mi.defaultValues.length
 				for(i = 0; i < len; i++){
 					
-					_establishValFromPool(mi.defaultValues[i].kind, mi.defaultValues[i].val);
+					_establishValFromPool(mi.defaultValues[i].kind, mi.defaultValues[i].val)
 				}
 			}
 			
 			if(MethodInfo.hasParamNamesFlag(mi.flags)){
-				len = mi.paramNames.length;
+				len = mi.paramNames.length
 				for(i = 0; i < len; i++){
-					_establishString(mi.paramNames[i]);
+					_establishString(mi.paramNames[i])
 				}
 			}
 		}
 		
 		private function _establishInstruction(instr:Instruction):void {
-			if(_estObjs[instr]) return;
-			_estObjs[instr] = instr;
+			if(_estObjs[instr]) return
+			_estObjs[instr] = instr
 			
-			var opcode:int = instr.opcode;
-			var operands:Array = instr.operands;
+			var opcode:int = instr.opcode
+			var operands:Array = instr.operands
 			
 			switch(opcode){
 				case Op.debugfile:
 				case Op.pushstring:
-					_establishString(operands[0]);
-					break;
+					_establishString(operands[0])
+					break
 				case Op.pushnamespace:
-					_establishNamespace(operands[0]);
+					_establishNamespace(operands[0])
 					break
 				case Op.pushint:
-					_establishInt(operands[0]);
+					_establishInt(operands[0])
 					break
 				case Op.pushuint:
-					_establishUint(operands[0]);
-					break;
+					_establishUint(operands[0])
+					break
 				case Op.pushdouble:
-					_establishDouble(operands[0]);
-					break;
+					_establishDouble(operands[0])
+					break
 				
 				case Op.dxns:
 					// nothing
-					break;
+					break
 				
 				case Op.getsuper: 
 				case Op.setsuper: 
@@ -352,8 +352,8 @@ package abc {
 				case Op.coerce: 
 				case Op.astype: 
 				case Op.getdescendants:
-					_establishMultiname(operands[0]);
-					break;
+					_establishMultiname(operands[0])
+					break
 				case Op.constructprop:
 				case Op.callproperty:
 				case Op.callproplex:
@@ -361,19 +361,19 @@ package abc {
 				case Op.callsupervoid:
 				case Op.callpropvoid:
 					_establishMultiname(operands[0]);
-					break;
+					break
 				case Op.newfunction:
-					_establishMethodInfo(operands[0]);
-					break;
+					_establishMethodInfo(operands[0])
+					break
 				case Op.callstatic:
-					_establishMethodInfo(operands[0]);
-					break;
+					_establishMethodInfo(operands[0])
+					break
 				case Op.newclass: 
-					_establishInstanceInfo(operands[0]);
-					break;
+					_establishInstanceInfo(operands[0])
+					break
 				case Op.lookupswitch:
 					// nothing to establish
-					break;
+					break
 				case Op.jump:
 				case Op.iftrue:     case Op.iffalse:
 				case Op.ifeq:       case Op.ifne:
@@ -383,7 +383,7 @@ package abc {
 				case Op.iflt:       case Op.ifnlt:
 				case Op.ifstricteq: case Op.ifstrictne:
 					// nothing
-					break;
+					break
 				
 				case Op.inclocal:
 				case Op.declocal:
@@ -403,252 +403,252 @@ package abc {
 					break
 				case Op.debug:
 					// nothing
-					break;
+					break
 				case Op.newobject:
 					// nothing
-					break;
+					break
 				case Op.newarray:
 					// nothing
-					break;
+					break
 				case Op.call:
 				case Op.construct:
 				case Op.constructsuper:
 					// nothing
-					break;
+					break
 				case Op.pushbyte:
 				case Op.getscopeobject:
 					// nothing
-					break;
+					break
 				case Op.hasnext2:
 					// nothing
-					break;
+					break
 				case Op.applytype: 
 					// nothing
-					break;
+					break
 				default:
-					break;
+					break
 			}
 		}
 		
 		private function _establishException(err:Exception):void {
-			if(_estObjs[err]) return;
-			_estObjs[err] = err; 
+			if(_estObjs[err]) return
+			_estObjs[err] = err
 			
-			_establishString(err.exc_type);
-			_establishString(err.var_name);
+			_establishString(err.exc_type)
+			_establishString(err.var_name)
 		}
 		
 		private function _establishInt(i:int):void {
-			_estInts[i] = i;
+			_estInts[i] = i
 		}
 		
 		private function _establishUint(u:uint):void {
-			_estUints[u] = u;
+			_estUints[u] = u
 		}
 		
 		private function _establishDouble(d:Number):void {
-			_estDoubles[d] = d;
+			_estDoubles[d] = d
 		}
 		
 		private function _establishString(s:String):void {
-			_estStrings[s] = s;
+			_estStrings[s] = s
 		}
 		
 		private function _establishNamespace(n:ABCNamespace):void {
-			_estObjs[n] = n;
+			_estObjs[n] = n
 		}
 		
 		private function _establishNSSet(nss:Array):void {
-			if(_estObjs[nss]) return;
-			_estObjs[nss] = nss;
+			if(_estObjs[nss]) return
+			_estObjs[nss] = nss
 			
-			var len:int = nss.length;
+			var len:int = nss.length
 			for(var i:int = 0; i < len; i++){
-				if(nss[i] is Namespace) _establishNamespace(nss[i]);
+				if(nss[i] is Namespace) _establishNamespace(nss[i])
 			}
 		}
 		
 		private function _establishMultiname(m:Multiname):void {
-			if(_estObjs[m]) return;
-			_estObjs[m] = m;
+			if(_estObjs[m]) return
+			_estObjs[m] = m
 			
-			if(m.name) _establishString(m.name);
-			if(m.ns) _establishNamespace(m.ns);
-			if(m.nsSet) _establishNSSet(m.nsSet);
-			if(m.typeName) _establishMultiname(m.typeName);
+			if(m.name) _establishString(m.name)
+			if(m.ns) _establishNamespace(m.ns)
+			if(m.nsSet) _establishNSSet(m.nsSet)
+			if(m.typeName) _establishMultiname(m.typeName)
 			if(m.params){
 				for(var i:int = 0; i < m.params.length; i++){
-					if(m.params[i]) _establishMultiname(m.params[i]);
+					if(m.params[i]) _establishMultiname(m.params[i])
 				}
 			}
 		}
 		
 		private function _write():void {
-			trace('starting write');
-			_bytes = new ByteArray();
+			trace('starting write')
+			_bytes = new ByteArray
 			
 			/*if(_abc.abcname){
-				_bytes.writeUnsignedInt(_abc.flags);
-				trace(_bytes.position);
-				_bytes.writeUTFBytes(_abc.abcname);
-				trace(_bytes.position);
-				_bytes.writeByte(0); // null terminate string?
-				trace(_bytes.position);
+				_bytes.writeUnsignedInt(_abc.flags)
+				trace(_bytes.position)
+				_bytes.writeUTFBytes(_abc.abcname)
+				trace(_bytes.position)
+				_bytes.writeByte(0) // null terminate string?
+				trace(_bytes.position)
 			}*/
 			
-			//_writeU16(_abc.minor_version);
-			//_writeU16(_abc.major_version);
-			_bytes.writeByte(0x0);
-			_bytes.writeByte(0x10);
-			_bytes.writeByte(0x0);
-			_bytes.writeByte(0x2e);
-			//_bytes.writeShort(_abc.minor_version);
-			//_bytes.writeShort(_abc.major_version);
+			//_writeU16(_abc.minor_version)
+			//_writeU16(_abc.major_version)
+			_bytes.writeByte(0x0)
+			_bytes.writeByte(0x10)
+			_bytes.writeByte(0x0)
+			_bytes.writeByte(0x2e)
+			//_bytes.writeShort(_abc.minor_version)
+			//_bytes.writeShort(_abc.major_version)
 			
-			_bytes.writeByte(0); // appears to be unused (?)
+			_bytes.writeByte(0) // appears to be unused (?)
 			
 			// constant pool
-			trace('starting constant');
-			_writeConstantPool();
+			trace('starting constant')
+			_writeConstantPool()
 			
-			trace('starting rest');
-			_writeRest();
+			trace('starting rest')
+			_writeRest()
 		}
 		
 		private function _writeConstantPool():void {
-			trace('int pool');
+			trace('int pool')
 			// int pool
-			var int_count:int = _abc.int_pool.length;
+			var int_count:int = _abc.int_pool.length
 			if(int_count <= 1){
-				_writeU30(0);
+				_writeU30(0)
 			} else {
-				_writeU30(int_count);
-				var int_pool:Array = _abc.int_pool;
+				_writeU30(int_count)
+				var int_pool:Array = _abc.int_pool
 				for(var i:int = 1; i < int_count; i++){ // 1st pool entry is implicit
-					_writeU30(int_pool[i]);
+					_writeU30(int_pool[i])
 				}
 			}
 			
-			trace('uints');
+			trace('uints')
 			// uint pool
-			var uint_count:int = _abc.uint_pool.length;
+			var uint_count:int = _abc.uint_pool.length
 			if(uint_count <= 1){
-				_writeU30(0);
+				_writeU30(0)
 			} else {
-				_writeU30(uint_count);
-				var uint_pool:Array = _abc.uint_pool;
+				_writeU30(uint_count)
+				var uint_pool:Array = _abc.uint_pool
 				for(i = 1; i < uint_count; i++){
-					_writeU30(uint_pool[i]);
+					_writeU30(uint_pool[i])
 				}
 			}
 			
 			// double pool
-			var double_count:int = _abc.double_pool.length;
+			var double_count:int = _abc.double_pool.length
 			if(double_count <= 1){
-				_writeU30(0);
+				_writeU30(0)
 			} else {
-				_writeU30(double_count);
-				var double_pool:Array = _abc.double_pool;
+				_writeU30(double_count)
+				var double_pool:Array = _abc.double_pool
 				for(i = 1; i < double_count; i++){
-					_bytes.endian = Endian.LITTLE_ENDIAN;
-					_bytes.writeDouble(double_pool[i]);
-					_bytes.endian = Endian.BIG_ENDIAN;
+					_bytes.endian = Endian.LITTLE_ENDIAN
+					_bytes.writeDouble(double_pool[i])
+					_bytes.endian = Endian.BIG_ENDIAN
 				}
 			}
 			
 			// string pool
-			var string_count:int = _abc.string_pool.length;
+			var string_count:int = _abc.string_pool.length
 			if(string_count <= 1){
-				_writeU30(0);
+				_writeU30(0)
 			} else {
-				_writeU30(string_count);
-				var string_pool:Array = _abc.string_pool;
+				_writeU30(string_count)
+				var string_pool:Array = _abc.string_pool
 				for(i = 1; i < string_count; i++){
-					var str:String = string_pool[i];
-					_writeU30(str.length);
-					_bytes.writeUTFBytes(str);
+					var str:String = string_pool[i]
+					_writeU30(str.length)
+					_bytes.writeUTFBytes(str)
 				}
 			}
-			trace('namespaces');
+			trace('namespaces')
 			
-			var namespace_count:int = _abc.namespace_pool.length;
+			var namespace_count:int = _abc.namespace_pool.length
 			if(namespace_count <= 1){
-				_writeU30(0);
+				_writeU30(0)
 			} else {
-				_writeU30(namespace_count);
-				var namespace_pool:Array = _abc.namespace_pool;
+				_writeU30(namespace_count)
+				var namespace_pool:Array = _abc.namespace_pool
 				for(i = 1; i < namespace_count; i++){
-					var namespace:ABCNamespace = namespace_pool[i];
-					_bytes.writeByte(namespace.kind);
+					var namespace:ABCNamespace = namespace_pool[i]
+					_bytes.writeByte(namespace.kind)
 					if(namespace.name == '' && namespace.kind == ABC.PackageNamespace){
-						_writeU30(1);
+						_writeU30(1)
 					} else {
-						_writeU30(_abc.string_pool.indexOf(namespace.name));
+						_writeU30(_abc.string_pool.indexOf(namespace.name))
 					}
 				}
 			}
 			
-			var ns_set_count:int = _abc.ns_set_pool.length;
+			var ns_set_count:int = _abc.ns_set_pool.length
 			if(ns_set_count <= 1){
-				_writeU30(0);
+				_writeU30(0)
 			} else {
-				_writeU30(ns_set_count);
+				_writeU30(ns_set_count)
 				for(i = 1; i < ns_set_count; i++){
-					var ns_set:Array = _abc.ns_set_pool[i];
-					_writeU30(ns_set.length);
+					var ns_set:Array = _abc.ns_set_pool[i]
+					_writeU30(ns_set.length)
 					for(var j:int = 0; j < ns_set.length; j++){
-						_writeU30(_abc.namespace_pool.indexOf(ns_set[j]));
+						_writeU30(_abc.namespace_pool.indexOf(ns_set[j]))
 					}
 				}
 			}
 			
-			trace('multinames');
-			var multiname_count:int = _abc.multiname_pool.length;
+			trace('multinames')
+			var multiname_count:int = _abc.multiname_pool.length
 			if(multiname_count <= 1){
-				_writeU30(0);
+				_writeU30(0)
 			} else {
-				_writeU30(multiname_count);
+				_writeU30(multiname_count)
 				for(i = 1; i < multiname_count; i++){
-					var m:Multiname = _abc.multiname_pool[i];
-					_bytes.writeByte(m.kind);
+					var m:Multiname = _abc.multiname_pool[i]
+					_bytes.writeByte(m.kind)
 					switch(m.kind){
 						case Multiname.QName:
 						case Multiname.QNameA:
-							_writeU30(_abc.namespace_pool.indexOf(m.ns));
-							_writeU30(_abc.string_pool.indexOf(m.name));
-							break;
+							_writeU30(_abc.namespace_pool.indexOf(m.ns))
+							_writeU30(_abc.string_pool.indexOf(m.name))
+							break
 						
 						case Multiname.RTQName:
 						case Multiname.RTQNameA:
-							_writeU30(_abc.string_pool.indexOf(m.name));
-							break;
+							_writeU30(_abc.string_pool.indexOf(m.name))
+							break
 						
 						case Multiname.RTQNameL:
 						case Multiname.RTQNameLA:
 							// nothing
-							break;
+							break
 						
 						case Multiname.Multiname:
 						case Multiname.MultinameA:
-							_writeU30(_abc.string_pool.indexOf(m.name));
-							_writeU30(_abc.ns_set_pool.indexOf(m.nsSet));
-							break;
+							_writeU30(_abc.string_pool.indexOf(m.name))
+							_writeU30(_abc.ns_set_pool.indexOf(m.nsSet))
+							break
 						
 						case Multiname.MultinameL:
 						case Multiname.MultinameLA:
-							_writeU30(_abc.ns_set_pool.indexOf(m.nsSet));
-							break;
+							_writeU30(_abc.ns_set_pool.indexOf(m.nsSet))
+							break
 						
 						case Multiname.TypeName:
-							_writeU30(_abc.multiname_pool.indexOf(m.typeName));
-							_writeU30(m.params.length);
+							_writeU30(_abc.multiname_pool.indexOf(m.typeName))
+							_writeU30(m.params.length)
 							for(j = 0; j < m.params.length; j++){
-								_writeU30(_abc.multiname_pool.indexOf(m.params[j]));
+								_writeU30(_abc.multiname_pool.indexOf(m.params[j]))
 							}
-							break;
+							break
 						
 						default:
-							throw new VerifyError('Unexpected multiname kind: ' + m.kind);
+							throw new VerifyError('Unexpected multiname kind: ' + m.kind)
 					}
 				}
 			}
@@ -658,184 +658,184 @@ package abc {
 		 * Write the parts of the ABC file that aren't part of the constant pool.
 		 */
 		private function _writeRest():void {
-			var method_count:int = _abc.method_info_pool.length;
-			_writeU30(method_count);
+			var method_count:int = _abc.method_info_pool.length
+			_writeU30(method_count)
 			for(var i:int = 0; i < method_count; i++){
-				var mi:MethodInfo = _abc.method_info_pool[i];
-				_writeU30(mi.paramTypes.length);
-				_writeU30(_abc.multiname_pool.indexOf(mi.returnType));
+				var mi:MethodInfo = _abc.method_info_pool[i]
+				_writeU30(mi.paramTypes.length)
+				_writeU30(_abc.multiname_pool.indexOf(mi.returnType))
 				
 				for(var j:int = 0; j < mi.paramTypes.length; j++){
-					var index:int = _abc.multiname_pool.indexOf(mi.paramTypes[j]);
-					_writeU30(index);
+					var index:int = _abc.multiname_pool.indexOf(mi.paramTypes[j])
+					_writeU30(index)
 				}
 				
-				_writeU30(_abc.string_pool.indexOf(mi.name));
-				_bytes.writeByte(mi.flags);
+				_writeU30(_abc.string_pool.indexOf(mi.name))
+				_bytes.writeByte(mi.flags)
 				
 				if(MethodInfo.hasOptionalFlag(mi.flags)){
-					_writeU30(mi.defaultValues.length); // option_count
+					_writeU30(mi.defaultValues.length) // option_count
 					for(j = 0; j < mi.defaultValues.length; j++){
-						var valObj:Object = mi.defaultValues[j];
-						_writeU30(_poolIndexFromKind(valObj.value, valObj.kind));
-						_bytes.writeByte(valObj.kind);
+						var valObj:Object = mi.defaultValues[j]
+						_writeU30(_poolIndexFromKind(valObj.value, valObj.kind))
+						_bytes.writeByte(valObj.kind)
 					}
 				}
 				
 				if(MethodInfo.hasParamNamesFlag(mi.flags)){
 					for(j = 0; j < mi.paramNames.length; j++){
-						_writeU30(_abc.string_pool.indexOf(mi.paramNames[j]));
+						_writeU30(_abc.string_pool.indexOf(mi.paramNames[j]))
 					}
 				}
 			}
 			
-			var metadata_count:int = _abc.metadata_pool.length;
-			_writeU30(metadata_count);
+			var metadata_count:int = _abc.metadata_pool.length
+			_writeU30(metadata_count)
 			for(i = 0; i < metadata_count; i++){
-				var md:Metadata = _abc.metadata_pool[i];
-				_writeU30(_abc.string_pool.indexOf(md.name));
-				_writeU30(md.data.length);
+				var md:Metadata = _abc.metadata_pool[i]
+				_writeU30(_abc.string_pool.indexOf(md.name))
+				_writeU30(md.data.length)
 				for(j = 0; j < md.data.length; j++){
-					_writeU30(_abc.string_pool.indexOf(md.data[j].key));
-					_writeU30(_abc.string_pool.indexOf(md.data[j].value));
+					_writeU30(_abc.string_pool.indexOf(md.data[j].key))
+					_writeU30(_abc.string_pool.indexOf(md.data[j].value))
 				}
 			}
 			
-			var class_count:int = Math.min(_abc.instance_info_pool.length,_abc.class_info_pool.length);
-			_writeU30(class_count);
+			var class_count:int = Math.min(_abc.instance_info_pool.length,_abc.class_info_pool.length)
+			_writeU30(class_count)
 			for(i = 0; i < class_count; i++){
-				var ii:InstanceInfo = _abc.instance_info_pool[i];
-				_writeU30(_abc.multiname_pool.indexOf(ii.name));
-				_writeU30(_abc.multiname_pool.indexOf(ii.super_name));
-				_bytes.writeByte(ii.flags);
+				var ii:InstanceInfo = _abc.instance_info_pool[i]
+				_writeU30(_abc.multiname_pool.indexOf(ii.name))
+				_writeU30(_abc.multiname_pool.indexOf(ii.super_name))
+				_bytes.writeByte(ii.flags)
 				if(InstanceInfo.hasProtectedNsFlag(ii.flags)){
-					_writeU30(_abc.namespace_pool.indexOf(ii.protectedNs));
+					_writeU30(_abc.namespace_pool.indexOf(ii.protectedNs))
 				}
-				_writeU30(ii.interfaces.length);
+				_writeU30(ii.interfaces.length)
 				for(j = 0; j < ii.interfaces.length; j++){
-					_writeU30(_abc.multiname_pool.indexOf(ii.interfaces[j]));
+					_writeU30(_abc.multiname_pool.indexOf(ii.interfaces[j]))
 				}
-				_writeU30(_abc.method_info_pool.indexOf(ii.iinit));
-				_writeU30(ii.traits.length);
-				_writeTraits(ii.traits);
+				_writeU30(_abc.method_info_pool.indexOf(ii.iinit))
+				_writeU30(ii.traits.length)
+				_writeTraits(ii.traits)
 			}
 			
 			for(i = 0; i < class_count; i++){
-				var ci:ClassInfo = _abc.class_info_pool[i];
-				_writeU30(_abc.method_info_pool.indexOf(ci.cinit));
-				_writeU30(ci.traits.length);
-				_writeTraits(ci.traits);
+				var ci:ClassInfo = _abc.class_info_pool[i]
+				_writeU30(_abc.method_info_pool.indexOf(ci.cinit))
+				_writeU30(ci.traits.length)
+				_writeTraits(ci.traits)
 			}
 			
-			var script_count:int = _abc.script_info_pool.length;
-			_writeU30(script_count);
+			var script_count:int = _abc.script_info_pool.length
+			_writeU30(script_count)
 			for(i = 0; i < script_count; i++){
-				var si:ScriptInfo = _abc.script_info_pool[i];
-				_writeU30(_abc.method_info_pool.indexOf(si.init));
-				_writeU30(si.traits.length);
-				_writeTraits(si.traits);
+				var si:ScriptInfo = _abc.script_info_pool[i]
+				_writeU30(_abc.method_info_pool.indexOf(si.init))
+				_writeU30(si.traits.length)
+				_writeTraits(si.traits)
 			}
 			
-			var method_body_info_count:int = _abc.method_body_info_pool.length;
-			_writeU30(method_body_info_count);
+			var method_body_info_count:int = _abc.method_body_info_pool.length
+			_writeU30(method_body_info_count)
 			for(i = 0; i < method_body_info_count; i++){
-				var mbi:MethodBodyInfo = _abc.method_body_info_pool[i];
+				var mbi:MethodBodyInfo = _abc.method_body_info_pool[i]
 				
-				trace('walking MBI');
-				_walkBytecode(mbi);
+				trace('walking MBI')
+				_walkBytecode(mbi)
 				
-				_writeU30(_abc.method_info_pool.indexOf(mbi.method));
-				_writeU30(mbi.max_stack);
-				_writeU30(mbi.local_count);
-				_writeU30(mbi.init_scope_depth);
-				_writeU30(mbi.max_scope_depth);
+				_writeU30(_abc.method_info_pool.indexOf(mbi.method))
+				_writeU30(mbi.max_stack)
+				_writeU30(mbi.local_count)
+				_writeU30(mbi.init_scope_depth)
+				_writeU30(mbi.max_scope_depth)
 				
 				// instrs need to be written into a separate ByteArray first, so that the size is known for mbi.code_length
-				var instrBytes:ByteArray = new ByteArray();
+				var instrBytes:ByteArray = new ByteArray()
 				for(j = 0; j < mbi.code.length; j++){
-					_writeInstr(instrBytes, mbi.code[j]);
+					_writeInstr(instrBytes, mbi.code[j])
 				}
 				
-				_writeU30(instrBytes.length);
+				_writeU30(instrBytes.length)
 				
 				// actually write the code to the ABC block
-				instrBytes.position = 0;
-				_bytes.writeBytes(instrBytes);
+				instrBytes.position = 0
+				_bytes.writeBytes(instrBytes)
 				
-				_writeU30(mbi.exceptions.length);
+				_writeU30(mbi.exceptions.length)
 				for(j = 0; j < mbi.exceptions.length; j++){
-					var err:Exception = mbi.exceptions[j];
-					_writeU30(err.from);
-					_writeU30(err.to);
-					_writeU30(err.target);
-					_writeU30(_abc.string_pool.indexOf(err.exc_type));
-					_writeU30(_abc.string_pool.indexOf(err.var_name));
+					var err:Exception = mbi.exceptions[j]
+					_writeU30(err.from)
+					_writeU30(err.to)
+					_writeU30(err.target)
+					_writeU30(_abc.string_pool.indexOf(err.exc_type))
+					_writeU30(_abc.string_pool.indexOf(err.var_name))
 				}
-				_writeU30(mbi.traits.length);
-				_writeTraits(mbi.traits);
+				_writeU30(mbi.traits.length)
+				_writeTraits(mbi.traits)
 			}
 		}
 		
 		
 		private function _walkBytecode(mbi:MethodBodyInfo):void {
-			var code:Array = mbi.code;
+			var code:Array = mbi.code
 			
-			var scope_stack:int = mbi.init_scope_depth;
-			var max_scope:int = scope_stack;
+			var scope_stack:int = mbi.init_scope_depth
+			var max_scope:int = scope_stack
 			
-			var stack:int = 0;
-			var max_stack:int = 0;
+			var stack:int = 0
+			var max_stack:int = 0
 			
-			var max_register:uint = 0;
-			var reg:uint = 0;
+			var max_register:uint = 0
+			var reg:uint = 0
 			
-			var len:int = code.length;
+			var len:int = code.length
 			for(var i:int = 0; i < len; i++){
-				var instr:Instruction = code[i];
-				scope_stack += instr.scopeEffect;
-				if(scope_stack > max_scope) max_scope = scope_stack;
+				var instr:Instruction = code[i]
+				scope_stack += instr.scopeEffect
+				if(scope_stack > max_scope) max_scope = scope_stack
 				
-				stack += instr.stackEffect;
-				if(stack > max_stack) max_stack = stack;
+				stack += instr.stackEffect
+				if(stack > max_stack) max_stack = stack
 				
-				reg = instr.register;
-				if(reg > max_register) max_register = reg;
+				reg = instr.register
+				if(reg > max_register) max_register = reg
 			}
 			
 			// TODO: init_scope_depth is probably the max_scope of the lexically enclosing parent method
-			mbi.max_scope_depth = max_scope;
-			mbi.max_stack = max_stack;
-			mbi.local_count = max_register;
+			mbi.max_scope_depth = max_scope
+			mbi.max_stack = max_stack
+			mbi.local_count = max_register
 		}
 		
 		private function _writeInstr(bytes:ByteArray, instr:Instruction):void {
-			var opcode:int = instr.opcode;
-			var operands:Array = instr.operands;
-			bytes.writeByte(opcode);
+			var opcode:int = instr.opcode
+			var operands:Array = instr.operands
+			bytes.writeByte(opcode)
 			
-			if(!operands || operands.length == 0) return;
+			if(!operands || operands.length == 0) return
 			
 			switch(opcode){
 				case Op.debugfile:
 				case Op.pushstring:
-					ByteUtils.writeU30(bytes, _abc.string_pool.indexOf(operands[0]));
-					break;
+					ByteUtils.writeU30(bytes, _abc.string_pool.indexOf(operands[0]))
+					break
 				case Op.pushnamespace:
-					ByteUtils.writeU30(bytes, _abc.namespace_pool.indexOf(operands[0]));
+					ByteUtils.writeU30(bytes, _abc.namespace_pool.indexOf(operands[0]))
 					break
 				case Op.pushint:
-					ByteUtils.writeU30(bytes, _abc.int_pool.indexOf(operands[0]));
+					ByteUtils.writeU30(bytes, _abc.int_pool.indexOf(operands[0]))
 					break
 				case Op.pushuint:
-					ByteUtils.writeU30(bytes, _abc.uint_pool.indexOf(operands[0]));
-					break;
+					ByteUtils.writeU30(bytes, _abc.uint_pool.indexOf(operands[0]))
+					break
 				case Op.pushdouble:
-					ByteUtils.writeU30(bytes, _abc.double_pool.indexOf(operands[0]));
-					break;
+					ByteUtils.writeU30(bytes, _abc.double_pool.indexOf(operands[0]))
+					break
 				
 				case Op.dxns:
-					ByteUtils.writeU30(bytes, operands[0]);
-					break;
+					ByteUtils.writeU30(bytes, operands[0])
+					break
 				
 				case Op.getsuper: 
 				case Op.setsuper: 
@@ -851,34 +851,34 @@ package abc {
 				case Op.coerce: 
 				case Op.astype: 
 				case Op.getdescendants:
-					ByteUtils.writeU30(bytes, _abc.multiname_pool.indexOf(operands[0]));
-					break;
+					ByteUtils.writeU30(bytes, _abc.multiname_pool.indexOf(operands[0]))
+					break
 				case Op.constructprop:
 				case Op.callproperty:
 				case Op.callproplex:
 				case Op.callsuper:
 				case Op.callsupervoid:
 				case Op.callpropvoid:
-					ByteUtils.writeU30(bytes, _abc.multiname_pool.indexOf(operands[0]));
-					ByteUtils.writeU30(bytes, operands[1]);
-					break;
+					ByteUtils.writeU30(bytes, _abc.multiname_pool.indexOf(operands[0]))
+					ByteUtils.writeU30(bytes, operands[1])
+					break
 				case Op.newfunction:
-					ByteUtils.writeU30(bytes, _abc.method_info_pool.indexOf(operands[0]));
-					break;
+					ByteUtils.writeU30(bytes, _abc.method_info_pool.indexOf(operands[0]))
+					break
 				case Op.callstatic:
-					ByteUtils.writeU30(bytes, _abc.method_info_pool.indexOf(operands[0]));
-					ByteUtils.writeU30(bytes, operands[1]);
-					break;
+					ByteUtils.writeU30(bytes, _abc.method_info_pool.indexOf(operands[0]))
+					ByteUtils.writeU30(bytes, operands[1])
+					break
 				case Op.newclass: 
-					ByteUtils.writeU30(bytes, _abc.instance_info_pool.indexOf(operands[0]));
-					break;
+					ByteUtils.writeU30(bytes, _abc.instance_info_pool.indexOf(operands[0]))
+					break
 				case Op.lookupswitch:
-					ByteUtils.writeS24(bytes, operands[0]);
-					ByteUtils.writeU30(bytes, operands.length - 3);
+					ByteUtils.writeS24(bytes, operands[0])
+					ByteUtils.writeU30(bytes, operands.length - 3)
 					for(var i:int = 2; i < operands.length; i++){
-						ByteUtils.writeS24(bytes, operands[i]);
+						ByteUtils.writeS24(bytes, operands[i])
 					}
-					break;
+					break
 				case Op.jump:
 				case Op.iftrue:     case Op.iffalse:
 				case Op.ifeq:       case Op.ifne:
@@ -887,8 +887,8 @@ package abc {
 				case Op.ifle:       case Op.ifnle:
 				case Op.iflt:       case Op.ifnlt:
 				case Op.ifstricteq: case Op.ifstrictne:
-					ByteUtils.writeS24(bytes, operands[0]);
-					break;
+					ByteUtils.writeS24(bytes, operands[0])
+					break
 				
 				case Op.inclocal:
 				case Op.declocal:
@@ -904,90 +904,90 @@ package abc {
 				case Op.setslot:
 				case Op.pushshort:
 				case Op.newcatch:
-					ByteUtils.writeU30(bytes, operands[0]);
+					ByteUtils.writeU30(bytes, operands[0])
 					break
 				case Op.debug:
-					bytes.writeByte(operands[0]);
-					ByteUtils.writeU30(bytes, operands[1]);
-					bytes.writeByte(operands[2]);
-					ByteUtils.writeU30(bytes, operands[3]);
-					break;
+					bytes.writeByte(operands[0])
+					ByteUtils.writeU30(bytes, operands[1])
+					bytes.writeByte(operands[2])
+					ByteUtils.writeU30(bytes, operands[3])
+					break
 				case Op.newobject:
-					ByteUtils.writeU30(bytes, operands[0]);
-					break;
+					ByteUtils.writeU30(bytes, operands[0])
+					break
 				case Op.newarray:
-					ByteUtils.writeU30(bytes, operands[0]);
-					break;
+					ByteUtils.writeU30(bytes, operands[0])
+					break
 				case Op.call:
 				case Op.construct:
 				case Op.constructsuper:
-					ByteUtils.writeU30(bytes, operands[0]);
-					break;
+					ByteUtils.writeU30(bytes, operands[0])
+					break
 				case Op.pushbyte:
 				case Op.getscopeobject:
-					bytes.writeByte(operands[0]);
-					break;
+					bytes.writeByte(operands[0])
+					break
 				case Op.hasnext2:
-					ByteUtils.writeU30(bytes, operands[0]);
-					ByteUtils.writeU30(bytes, operands[1]);
-					break;
+					ByteUtils.writeU30(bytes, operands[0])
+					ByteUtils.writeU30(bytes, operands[1])
+					break
 				
 				case Op.applytype:
-					ByteUtils.writeU30(bytes, operands[0]);
-					break;
+					ByteUtils.writeU30(bytes, operands[0])
+					break
 				default:
 					// no operands
-					break;
+					break
 			}
 		}
 		
 		private function _writeTraits(ts:Array):void {
 			for(var i:int = 0; i < ts.length; i++){
-				_writeTrait(ts[i]);
+				_writeTrait(ts[i])
 			}
 		}
 		
 		private function _writeTrait(t:Trait):void {
-			_writeU30(_abc.multiname_pool.indexOf(t.name));
-			_bytes.writeByte(t.kind);
+			_writeU30(_abc.multiname_pool.indexOf(t.name))
+			_bytes.writeByte(t.kind)
 			
 			switch(t.type){
 				case Trait.Slot:
 				case Trait.Const:
-					_writeU30(t['slot_id']);
-					_writeU30(_abc.multiname_pool.indexOf(t['type_name']));
-					var index:int = _poolIndexFromKind(t['value'], t['value_kind']);
-					_writeU30(index);
+					_writeU30(t['slot_id'])
+					_writeU30(_abc.multiname_pool.indexOf(t['type_name']))
+					var index:int = _poolIndexFromKind(t['value'], t['value_kind'])
+					_writeU30(index)
 					if(index != 0){
-						_bytes.writeByte(t['value_kind']);
+						_bytes.writeByte(t['value_kind'])
 					}
-					break;
+					break
 				
 				case Trait.Class:
-					_writeU30(t['slot_id']);
-					_writeU30(_abc.class_info_pool.indexOf(t['class_info']));
-					break;
+					_writeU30(t['slot_id'])
+					_writeU30(_abc.class_info_pool.indexOf(t['class_info']))
+					break
 				
 				case Trait.Function:
-					_writeU30(t['slot_id']);
-					_writeU30(_abc.method_info_pool.indexOf(t['function_info']));
-					break;
+					_writeU30(t['slot_id'])
+					_writeU30(_abc.method_info_pool.indexOf(t['function_info']))
+					break
 				
 				case Trait.Method:
 				case Trait.Getter:
 				case Trait.Setter:
-					_writeU30(t['disp_id']);
-					_writeU30(_abc.method_info_pool.indexOf(t['method']));
-					break;
+					_writeU30(t['disp_id'])
+					_writeU30(_abc.method_info_pool.indexOf(t['method']))
+					break
 				
 				default:
-					throw new VerifyError('Unknown trait type encountered: ' + t.type);
+					throw new VerifyError('Unknown trait type encountered: ' + t.type)
 			}
 			
 			if(t.attr & Trait.Metadata){
-				_writeU30(t.metadata.length);
+				_writeU30(t.metadata.length)
 				for(var i:int = 0; i < t.metadata.length; i++){
-					_writeU30(_abc.metadata_pool.indexOf(t.metadata[i]));
+					_writeU30(_abc.metadata_pool.indexOf(t.metadata[i]))
 				}
 			}
 		}
@@ -995,36 +995,36 @@ package abc {
 		private function _poolIndexFromKind(val:*, kind:int):int {
 			switch(kind){
 				case ABC.Int:
-					return _abc.int_pool.indexOf(val);
-					break;
+					return _abc.int_pool.indexOf(val)
+					break
 				
 				case ABC.UInt:
-					return _abc.uint_pool.indexOf(val);
-					break;
+					return _abc.uint_pool.indexOf(val)
+					break
 				
 				case ABC.Double:
-					return _abc.double_pool.indexOf(val);
-					break;
+					return _abc.double_pool.indexOf(val)
+					break
 				
 				case ABC.Utf8:
-					return _abc.string_pool.indexOf(val);
-					break;
+					return _abc.string_pool.indexOf(val)
+					break
 				
 				case ABC.True:
-					return 0;
-					break;
+					return 0
+					break
 				
 				case ABC.False:
-					return 0;
-					break;
+					return 0
+					break
 				
 				case ABC.Null:
-					return 0;
-					break;
+					return 0
+					break
 				
 				case ABC.Undefined:
-					return 0;
-					break;
+					return 0
+					break
 				
 				case ABC.Namespace:
 				case ABC.PackageNamespace:
@@ -1033,48 +1033,48 @@ package abc {
 				case ABC.ExplicitNamespace:
 				case ABC.StaticProtectedNs:
 				case ABC.PrivateNs:
-					return _abc.namespace_pool.indexOf(val);
-					break;
+					return _abc.namespace_pool.indexOf(val)
+					break
 				
 				default:
-					throw new VerifyError('Unexpected constant kind: ' + kind);
+					throw new VerifyError('Unexpected constant kind: ' + kind)
 			}
-			return 0;
+			return 0
 		}
 		
 		private function _writeU16(val:int):void {
-			_bytes.writeByte(val);
-			_bytes.writeByte(val >> 8);
+			_bytes.writeByte(val)
+			_bytes.writeByte(val >> 8)
 		}
 		
 		private function _writeS24(val:int):void {
-			_writeU16(val);
-			_bytes.writeByte(val >> 16);
+			_writeU16(val)
+			_bytes.writeByte(val >> 16)
 		}
 		
 		// adapted from:
 		// opensource.adobe.com/svn/opensource/flex/sdk/trunk/modules/asc/src/java/adobe/abc/GlobalOptimizer.java
 		private function _writeU30(val:int):void {
 			if(val < 128 && val >= 0){
-				_bytes.writeByte(val);
+				_bytes.writeByte(val)
 			} else if(val < 16384 && val >= 0){
-				_bytes.writeByte(val & 0x7F | 0x80);
-				_bytes.writeByte(val >> 7);
+				_bytes.writeByte(val & 0x7F | 0x80)
+				_bytes.writeByte(val >> 7)
 			} else if(val < 2097152 && val >= 0){
-				_bytes.writeByte(val & 0x7F | 0x80);
-				_bytes.writeByte(val >> 7 | 0x80);
-				_bytes.writeByte(val >> 14);
+				_bytes.writeByte(val & 0x7F | 0x80)
+				_bytes.writeByte(val >> 7 | 0x80)
+				_bytes.writeByte(val >> 14)
 			} else if(val < 268435456 && val >= 0){
-				_bytes.writeByte(val & 0x7F | 0x80);
-				_bytes.writeByte(val >> 7 | 0x80);
-				_bytes.writeByte(val >> 14 | 0x80);
-				_bytes.writeByte(val >> 21);
+				_bytes.writeByte(val & 0x7F | 0x80)
+				_bytes.writeByte(val >> 7 | 0x80)
+				_bytes.writeByte(val >> 14 | 0x80)
+				_bytes.writeByte(val >> 21)
 			} else {
-				_bytes.writeByte(val & 0x7F | 0x80);
-				_bytes.writeByte(val >> 7 | 0x80);
-				_bytes.writeByte(val >> 14 | 0x80);
-				_bytes.writeByte(val >> 21 | 0x80);
-				_bytes.writeByte(val >> 28);
+				_bytes.writeByte(val & 0x7F | 0x80)
+				_bytes.writeByte(val >> 7 | 0x80)
+				_bytes.writeByte(val >> 14 | 0x80)
+				_bytes.writeByte(val >> 21 | 0x80)
+				_bytes.writeByte(val >> 28)
 			}
 		}
 	}

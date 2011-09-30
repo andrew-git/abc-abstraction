@@ -1,54 +1,54 @@
 package swf.tags {
-	import swf.SWFReader;
+	import swf.SWFReader
 	
-	import flash.utils.*;
+	import flash.utils.*
 
 	public class Tag {
 		public var 
 			code	:uint,
-			bytes	:ByteArray;
+			bytes	:ByteArray
 		
 		public function Tag(code:uint){
-			this.code = code;
+			this.code = code
 		}
 		
 		public static function fromCode(code:uint):Tag {
-			var tag:Tag;
+			var tag:Tag
 			switch(code){
 				case End:
-					tag = new EndTag();
-					break;
+					tag = new EndTag
+					break
 				case FileAttributes:
-					tag = new FileAttributesTag();
-					break;
+					tag = new FileAttributesTag
+					break
 				case Metadata:
-					tag = new MetadataTag();
-					break;
+					tag = new MetadataTag
+					break
 				case DoABC:
-					tag = new DoABCTag();
-					break;
+					tag = new DoABCTag
+					break
 				case ScriptLimits:
-					tag = new ScriptLimitsTag();
-					break;
+					tag = new ScriptLimitsTag
+					break
 				case DefineBinaryData:
-					tag = new DefineBinaryDataTag();
-					break;
+					tag = new DefineBinaryDataTag
+					break
 				default:
-					tag = new Tag(code);
+					tag = new Tag(code)
 			}
-			return tag; // until implemented
+			return tag // until implemented
 		}
 		
 		public function readFrom(reader:SWFReader, length:uint):void {
-			bytes = new ByteArray();
-			reader.bytes.readBytes(bytes, 0, length);
+			bytes = new ByteArray
+			reader.bytes.readBytes(bytes, 0, length)
 		}
 		
 		/**
 		 * Tags shouldn't supply their own tag header.  SWFWriter writes those.
 		 */
 		public function toByteArray():ByteArray {
-			return bytes;
+			return bytes
 		}
 		
 		public static const
@@ -65,6 +65,6 @@ package swf.tags {
 			DefineShape3		:uint = 32,
 			DefineShape4		:uint = 83,
 			DoABC				:uint = 82,
-			DefineBinaryData	:uint = 87;
+			DefineBinaryData	:uint = 87
 	}
 }

@@ -1,18 +1,18 @@
 package abc.traits {
-	import abc.*;
+	import abc.*
 	
 	public class GetterTrait extends Trait {
 		public var	disp_id:int, // most likely a displacement ID for an object's virtual function table
-					method:MethodInfo;
+					method:MethodInfo
 		
 					
 		public function GetterTrait(name:Multiname, kind:int) {
-			super(name, kind);
+			super(name, kind)
 		}
 		
 		override public function fastInit(...args):void {
-			disp_id = args[0];
-			method = args[1];
+			disp_id = args[0]
+			method = args[1]
 		}
 	}
 }

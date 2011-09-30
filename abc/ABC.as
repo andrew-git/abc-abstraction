@@ -21,18 +21,18 @@ package abc {
 							ProtectedNamespace:int	= 0x18,
 							ExplicitNamespace:int	= 0x19,
 							StaticProtectedNs:int	= 0x1a,
-							PrivateNs:int			= 0x05;
+							PrivateNs:int			= 0x05
 		
 		public static const ClassSealed:int			= 0x01,
 							ClassFinal:int			= 0x02,
 							ClassInterface:int		= 0x04,
-							ClassProtectedNs:int	= 0x08;
+							ClassProtectedNs:int	= 0x08
 		
 		public var	abcname:String,
 					flags:uint,
-					length:uint;
+					length:uint
 					
-		public var useless:Boolean = false;
+		public var useless:Boolean = false
 		
 		public var	minor_version:uint,
 					major_version:uint,
@@ -47,7 +47,7 @@ package abc {
 					metadata_count:int,
 					class_count:int,
 					script_count:int,
-					method_body_count:int;
+					method_body_count:int
 		
 		public var	int_pool:Array,
 					uint_pool:Array,
@@ -61,22 +61,22 @@ package abc {
 					instance_info_pool:Array,
 					class_info_pool:Array,
 					script_info_pool:Array,
-					method_body_info_pool:Array;
+					method_body_info_pool:Array
 		
 		public function ABC() {
 			// a constructor would have too many arguments
 		}
 		
 		public static function readFrom(bytes:ByteArray):ABC {
-			return new ABCReader(bytes).abc;
+			return new ABCReader(bytes).abc
 		}
 		
 		public function toString():String {
-			return '[ABC ' + abcname + ' (' + length + ' bytes, ' + method_body_info_pool.length + ' functions)]';
+			return '[ABC ' + abcname + ' (' + length + ' bytes, ' + method_body_info_pool.length + ' functions)]'
 		}
 		
 		public function get constant_pool():Array {
-			return null; // or object with named field for each type of pool
+			return null // or object with named field for each type of pool
 		}
 	}
 }

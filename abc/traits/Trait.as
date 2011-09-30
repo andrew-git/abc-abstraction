@@ -1,5 +1,5 @@
 package abc.traits {
-	import abc.Multiname;
+	import abc.Multiname
 
 	public class Trait {
 		public static var	Slot:int		= 0,
@@ -8,55 +8,55 @@ package abc.traits {
 							Setter:int		= 3,
 							Class:int		= 4,
 							Function:int	= 5,
-							Const:int		= 6;
+							Const:int		= 6
 		
 		public static var	Final:int		= 0x01,
 							Override:int	= 0x02,
-							Metadata:int	= 0x04;
+							Metadata:int	= 0x04
 		
 		public static function subtype(name:Multiname, kind:int):Trait {
 			// multiline because a single line version breaks Flash Builder
-			var klass:* = classFromKind(kind);
-			return new klass(name, kind) as Trait;
+			var klass:* = classFromKind(kind)
+			return new klass(name, kind) as Trait
 		}
 		
 		public static function typeFromKind(kind:int):int {
-			return kind & 0x0f; // lower 4 bits
+			return kind & 0x0f // lower 4 bits
 		}
 		
 		// strange shadowing prevents type expressions from seeing top-level's Class class
 		public static function classFromKind(kind:int):* {
 			switch(typeFromKind(kind)){
 				case Slot:
-					return SlotTrait;
-					break; // technically this break is deadcode
+					return SlotTrait
+					break // technically this break is deadcode
 				
 				case Method:
-					return MethodTrait;
-					break;
+					return MethodTrait
+					break
 				
 				case Getter:
-					return GetterTrait;
-					break;
+					return GetterTrait
+					break
 				
 				case Setter:
-					return SetterTrait;
-					break;
+					return SetterTrait
+					break
 				
 				case Trait.Class: // careful of top-level Class shadowing
-					return ClassTrait;
-					break;
+					return ClassTrait
+					break
 				
 				case Trait.Function:
-					return FunctionTrait;
-					break;
+					return FunctionTrait
+					break
 				
 				case Const:
-					return ConstTrait;
-					break;
+					return ConstTrait
+					break
 				
 				default:
-					break;
+					break
 			}
 			return null;
 		}
@@ -65,24 +65,24 @@ package abc.traits {
 					kind:int,
 					type:int,
 					attr:int,
-					metadata:Array;
+					metadata:Array
 		
 		public function Trait(name:Multiname, kind:int) {
-			this.name = name;
-			this.kind = kind;
-			type = typeFromKind(kind);
-			attr = (kind & 0xf0) >> 4; // upper 4 bits
-			metadata = [];
+			this.name = name
+			this.kind = kind
+			type = typeFromKind(kind)
+			attr = (kind & 0xf0) >> 4 // upper 4 bits
+			metadata = []
 		}
 		
 		public function fastInit(...args):void {
-			throw new Error('fastInit is abstract for the Trait class; use it via overrides');
+			throw new Error('fastInit is abstract for the Trait class; use it via overrides')
 		}
 		
 		public function dump():String {
-			var s:String = '';
-			s += '[[ Trait name: ' + name + ', kind: ' + kind.toString(2) + ' ]]';
-			return s;
+			var s:String = ''
+			s += '[[ Trait name: ' + name + ', kind: ' + kind.toString(2) + ' ]]'
+			return s
 		}
 	}
 }

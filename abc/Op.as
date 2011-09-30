@@ -177,9 +177,9 @@ package abc {
 			debug				:int = 0xEF,
 			debugline			:int = 0xF0,
 			debugfile			:int = 0xF1,
-			bkptline			:int = 0xF2;
+			bkptline			:int = 0xF2
+		
 		public function Op(){
-			
 			
 		}
 	}
