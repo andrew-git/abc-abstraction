@@ -2,19 +2,22 @@ package abc {
 	import flash.utils.*
 	
 	public class Multiname {
-		public static const QName			:int	= 0x07,
-							QNameA			:int	= 0x0d,
-							RTQName			:int	= 0x0f,
-							RTQNameA		:int	= 0x10,
-							RTQNameL		:int	= 0x11,
-							RTQNameLA		:int	= 0x12,
-							Multiname		:int	= 0x09,
-							MultinameA		:int	= 0x0e,
-							MultinameL		:int	= 0x1b,
-							MultinameLA		:int	= 0x1c,
+		public static const 
+			QName			:int	= 0x07,
+			QNameA			:int	= 0x0d,
+			RTQName			:int	= 0x0f,
+			RTQNameA		:int	= 0x10,
+			RTQNameL		:int	= 0x11,
+			RTQNameLA		:int	= 0x12,
+			Multiname		:int	= 0x09,
+			MultinameA		:int	= 0x0e,
+			MultinameL		:int	= 0x1b,
+			MultinameLA		:int	= 0x1c,
+			
+			// named by abcdump constant
+			TypeName		:int	= 0x1d  // not in avm2overview
 							
-							// named by abcdump constant
-							TypeName		:int	= 0x1d  // not in avm2overview
+		public static var Any:abc.Multiname = new abc.Multiname(abc.Multiname.QName, ABCNamespace.public_ns, '')
 		
 		private static var kindMap:Array = []
 		kindMap[QName] = 'QName', kindMap[QNameA] = 'QNameA'

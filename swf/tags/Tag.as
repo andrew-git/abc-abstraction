@@ -33,6 +33,9 @@ package swf.tags {
 				case DefineBinaryData:
 					tag = new DefineBinaryDataTag
 					break
+				case SymbolClass: 
+					tag = new SymbolClassTag
+					break
 				default:
 					tag = new Tag(code)
 			}
@@ -65,6 +68,7 @@ package swf.tags {
 			DefineShape3		:uint = 32,
 			DefineShape4		:uint = 83,
 			DoABC				:uint = 82,
-			DefineBinaryData	:uint = 87
+			DefineBinaryData	:uint = 87,
+			SymbolClass			:uint = 76
 	}
 }

@@ -243,7 +243,7 @@ package abc {
 			trace('multiname count: ', multiname_count)
 			if(multiname_count){
 				multiname_pool = _abc.multiname_pool = new Array(multiname_count)
-				multiname_pool[0] = new Multiname(Multiname.Multiname, '', ns_set_pool[0]) 
+				multiname_pool[0] = Multiname.Any 
 				
 				for(var i:int = 1; i < multiname_count; i++){
 					// parse multiname_info [u8, ?depends?]

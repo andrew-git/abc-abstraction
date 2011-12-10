@@ -158,7 +158,6 @@ package abc {
 		 * http://opensource.adobe.com/svn/opensource/flex/sdk/trunk/modules/swfutils/src/java/flash/swf/SwfEncoder.java
 		 */
 		private static function writeBits(bytes:ByteArray, val:int, nBits:uint):void {
-			trace('writeBits', val, nBits)
 			while (nBits > 0){
 				if (nBits > bitPos){
 					//if more bits left to write then shift out what will fit
@@ -168,7 +167,6 @@ package abc {
 					// shift all the way left, then right to right
 					// justify the data to be or'ed in
 					bytes.writeByte(currentByte)
-					trace('~writeByte', currentByte.toString(2))
 					nBits -= bitPos
 					currentByte = 0
 					bitPos = 8
@@ -181,7 +179,6 @@ package abc {
 					if (bitPos == 0){
 						//if current byte is filled
 						bytes.writeByte(currentByte)
-						trace('~writeByte', currentByte.toString(2))
 						currentByte = 0
 						bitPos = 8
 					}

@@ -805,7 +805,7 @@ package abc {
 			// TODO: init_scope_depth is probably the max_scope of the lexically enclosing parent method
 			mbi.max_scope_depth = max_scope
 			mbi.max_stack = max_stack
-			mbi.local_count = max_register
+			mbi.local_count = max_register + 2
 		}
 		
 		private function _writeInstr(bytes:ByteArray, instr:Instruction):void {
