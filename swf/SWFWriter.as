@@ -28,15 +28,21 @@ package swf {
 		private function _write():void {
 			_writeHeader()
 			var compressedBytes:ByteArray = new ByteArray
-			compressedBytes.endian = Endian.BIG_ENDIAN
+			compressedBytes.endian = Endian.LITTLE_ENDIAN // was BIG, unsure why
 			ByteUtils.writeRect(compressedBytes, _swf.frameSize)
-			compressedBytes.writeShort(_swf.frameRate) // FIXME: SWFReader only reads a single byte, but the spec says it's a U16
+			compressedBytes.position++
+			compressedBytes.writeByte(_swf.frameRate) // FIXME: SWFReader only reads a single byte, but the spec says it's a U16
 			compressedBytes.writeShort(_swf.frameCount)
 			
 			var tagBytes:ByteArray = _writeTags()
 			compressedBytes.writeBytes(tagBytes)
+			/*
+				Fixes #1.  SWF format: 
+				"If this is a compressed SWF file (CWS signature), the FileLength field indicates the total length 
+				of the file after decompression, and thus generally does not match the file size."
+			*/
+			var fileLength:int = compressedBytes.length + _bytes.length
 			if(_swf.compressed){
-				trace('is compressed')
 				// ZLIB compress the bytes past the header
 				compressedBytes.compress()
 			}
@@ -44,12 +50,12 @@ package swf {
 			
 			// go back and write the real file length
 			_bytes.position = 4
-			_bytes.writeUnsignedInt(_bytes.length)
+			_bytes.writeUnsignedInt(fileLength)
 			_bytes.position = _bytes.length
 		}
 		
 		private function _writeHeader():void {
-			// signature FWS or CWS
+			// signature CWS or FWS
 			_bytes.writeByte(_swf.compressed ? 0x43 : 0x46)
 			_bytes.writeByte(0x57)
 			_bytes.writeByte(0x53)
