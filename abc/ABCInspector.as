@@ -41,7 +41,7 @@ package abc {
 		private function script(si:ScriptInfo):void {
 			// first inspect classes, etc.
 			for each(var t:Trait in si.traits){
-				switch(t.kind){
+				switch(t.type){
 					case Trait.Class:
 						klass(t as ClassTrait)
 				}
@@ -54,7 +54,12 @@ package abc {
 		private function klass(kt:ClassTrait):void {
 			var ci:ClassInfo = kt.class_info
 			var ii:InstanceInfo = _abc.instance_info_pool[_abc.class_info_pool.indexOf(ci)]
-			line('package {')
+			str('package ')
+			if(ii.name.ns != ABCNamespace.public_ns){
+				ns(ii.name.ns)
+				str(' ')
+			}
+			line('{')
 			indent
 			str(indents + 'public class ' + ii.name.name)
 			if(ii.super_name){
@@ -143,7 +148,11 @@ package abc {
 			str(indents)
 			
 			if(named){
-				ns(name.ns)
+				if(!konstructor){
+					ns(name.ns)
+				} else {
+					str('public')
+				}
 				if(!instance) str(' static')
 				str(' function ' + name.name + '(')
 				
@@ -202,7 +211,7 @@ package abc {
 		 */
 		private function fqn(m:Multiname):void {
 			if(m.ns != ABCNamespace.public_ns){
-				str(m.ns.name + '.')
+				if(m.ns) str(m.ns.name + '.') // FIXME: Why was m.ns null here?
 			} else if(m.name == ''){
 				str('*')
 			}
