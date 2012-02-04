@@ -20,12 +20,15 @@ package swf {
 		
 		public static function readFrom(bytes:ByteArray):SWF {
 			var reader:SWFReader = new SWFReader(bytes)
-			trace('[SWF: ', reader.swf.compressed, reader.swf.version, reader.swf.frameSize, reader.swf.frameRate, ' fps ]')
 			return reader.swf
 		}
 		
 		public function toByteArray():ByteArray {
 			return new SWFWriter(this).toByteArray()
+		}
+		
+		public function toString():String {
+			return (['[SWF' + version, (compressed ? '' : 'un') + 'compressed', frameSize.width + 'x' + frameSize.height, frameRate + 'fps]']).join(', ')
 		}
 		
 		private function _initDefaults():void {

@@ -17,11 +17,9 @@ package swf.tags {
 		
 		override public function readFrom(reader:SWFReader, length:uint):void {
 			var len:uint = reader.bytes.readUnsignedShort()
-			trace('slen', len)
 			for(var i:int = 0; i < len; i++){
 				tags[i] = reader.bytes.readUnsignedShort()
 				names[i] = reader.readString()
-				trace('reading syms', tags[i], names[i])
 			}
 		}
 		
@@ -31,7 +29,6 @@ package swf.tags {
 			ByteUtils.writeU16(bytes, tags.length)
 			
 			for(var i:int = 0; i < tags.length; i++){
-				trace('writing syms', tags[i], names[i])
 				ByteUtils.writeU16(bytes, tags[i])
 				bytes.writeUTFBytes(names[i])
 				bytes.writeByte(0)

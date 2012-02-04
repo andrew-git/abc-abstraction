@@ -33,7 +33,7 @@ package abc {
 					return '[namespace]::' + name
 					break
 				case ABC.PackageNamespace:
-					if(this == public_ns) return '(public)'
+					if(this == public_ns) return 'public'
 					return name
 					break
 				case ABC.PackageInternalNs:

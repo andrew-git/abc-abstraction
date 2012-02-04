@@ -41,6 +41,14 @@ package abc {
 			b.method = this // FIXME: Is this safe to do in a fully-flexible environment?
 		}
 		
+		public function get needRest():Boolean {
+			return Boolean(flags & NEED_REST)
+		}
+		
+		public function get hasOptional():Boolean {
+			return Boolean(flags & HAS_OPTIONAL)
+		}
+		
 		private static var _id:int = 1
 		private static function nextID():int {
 			return _id++

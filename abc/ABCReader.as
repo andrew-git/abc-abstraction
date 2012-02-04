@@ -66,14 +66,12 @@ package abc {
 					var abcBytes:ByteArray = ABCWriter.writeABC(_abc)
 					this.modABC = abcBytes
 				}
-				if(_abc.length == 2297) _abc.abcname = 'Hold_proxyURL'
 				abcs.push(_abc)
 			}
 		}
 		
 		private function _parseABC(bytes:ByteArray):void {
 			if(!bytes) throw new ArgumentError('"bytes" argument cannot reasonably be null.', 1491)
-			trace('-----------------parseABC-----------------\ngot this many abcs: ', bytes.length)
 			_bytes = bytes
 			_abc = new ABC
 			_abc.length = _bytes.length
@@ -84,16 +82,14 @@ package abc {
 				
 				var abcname:String = readString()
 				_abc.abcname = abcname
-				trace('flags: ', flags.toString(2), ', abcname: ', abcname)
 			}
 			
 			var minor:uint = _bytes.readUnsignedShort()
 			var major:uint = _bytes.readUnsignedShort()
 			_abc.major_version = major
 			_abc.minor_version = minor
-			
-			trace('abcFile version: ', major, minor)
-			trace('wasting', _bytes.readByte())
+
+			_bytes.readByte() // wasting this byte
 			_readConstantPool()			// cpool_info		constant_pool
 			_readMethodInfoPool()		// method_info		method[method_count]
 			_readMetadataPool()			// metadata_info	metadata[metadata_count]
@@ -101,8 +97,6 @@ package abc {
 			_readClassInfoPool()		// class_info		class[class_count]
 			_readScriptInfoPool()		// script_info		script[script_count]
 			_readMethodBodyInfoPool()	// method_body_info	method_body[method_body_count]
-			
-			trace('--------- done parsing ABC -------------')
 		}
 		
 		private function _readConstantPool():void {
@@ -119,7 +113,6 @@ package abc {
 			var int_count:uint = readU30()
 			_abc.int_count = int_count
 			
-			trace('int_count: ', int_count)
 			if(int_count){
 				// read int pool
 				int_pool = _abc.int_pool = new Array(int_count)
@@ -127,7 +120,6 @@ package abc {
 				
 				for(var i:int = 1; i < int_count; i++){
 					int_pool[i] = readS32()
-					trace('got int: ', int_pool[i])
 				}
 			} else {
 				int_pool = _abc.int_pool = [0]
@@ -136,7 +128,6 @@ package abc {
 		
 		private function _readUintPool():void {
 			var uint_count:uint = _abc.uint_count = readU30()
-			trace('uint_count: ', uint_count)
 			if(uint_count){
 				// read uint pool
 				uint_pool = _abc.uint_pool = new Array(uint_count)
@@ -144,7 +135,6 @@ package abc {
 				
 				for(var i:int = 1; i < uint_count; i++){
 					uint_pool[i] = readS32()
-					trace('got uint: ', uint_pool[i])
 				}
 			} else {
 				uint_pool = _abc.uint_pool = [0]
@@ -153,7 +143,6 @@ package abc {
 		
 		private function _readDoublePool():void {
 			var double_count:uint = _abc.double_count = readU30()
-			trace('double_count: ', double_count)
 			if(double_count){
 				// read double pool
 				double_pool = _abc.double_pool = new Array(double_count)
@@ -163,7 +152,6 @@ package abc {
 					_bytes.endian = Endian.LITTLE_ENDIAN
 					double_pool[i] = _bytes.readDouble()
 					_bytes.endian = Endian.BIG_ENDIAN
-					trace('got double: ', double_pool[i])
 				}
 			} else {
 				double_pool = _abc.double_pool = [0]
@@ -172,7 +160,6 @@ package abc {
 		
 		private function _readStringPool():void {
 			var string_count:int = _abc.string_count = readU30()
-			trace('string_count: ', string_count)
 			if(string_count){
 				string_pool = _abc.string_pool = new Array(string_count)
 				string_pool[0] = ''
@@ -182,7 +169,6 @@ package abc {
 					var str_len:int = readU30()
 					var str:String = _bytes.readUTFBytes(str_len)
 					string_pool[i] = str
-					trace('string[' + str_len + ']: ', '"' + str + '"')
 				}
 			} else {
 				string_pool = ['']
@@ -191,7 +177,6 @@ package abc {
 		
 		private function _readNamespacePool():void {
 			var namespace_count:int = _abc.namespace_count = readU30()
-			trace('namespace_count: ', namespace_count)
 			if(namespace_count){
 				namespace_pool = _abc.namespace_pool = new Array(namespace_count)
 				namespace_pool[0] = new ABCNamespace(ABC.PackageNamespace, '')
@@ -208,7 +193,6 @@ package abc {
 						var ns:ABCNamespace = new ABCNamespace(ns_kind, ns_name)
 					}
 					namespace_pool[i] = ns
-					trace('namespace: ', ns.toString())
 				}
 			} else {
 				namespace_pool = _abc.namespace_pool = [new ABCNamespace(ABC.PackageNamespace, '')]
@@ -217,7 +201,6 @@ package abc {
 		
 		private function _readNSSetPool():void {
 			var ns_set_count:int = _abc.ns_set_count = readU30()
-			trace('namespace set count: ', ns_set_count)
 			if(ns_set_count){
 				ns_set_pool = _abc.ns_set_pool = new Array(ns_set_count)
 				ns_set_pool[0] = [new ABCNamespace(ABC.PackageNamespace, '')]
@@ -225,7 +208,6 @@ package abc {
 				for(var i:int = 1; i < ns_set_count; i++){
 					// parse each ns_set_info, [u30, u30]
 					var set_count:int = readU30()
-					trace('set count: ', set_count)
 					var ns_set:Array = new Array
 					for(var j:int = 0; j < set_count; j++){
 						var index:int = readU30()
@@ -240,7 +222,6 @@ package abc {
 		
 		private function _readMultinamePool():void {
 			var multiname_count:int = _abc.multiname_count = readU30()
-			trace('multiname count: ', multiname_count)
 			if(multiname_count){
 				multiname_pool = _abc.multiname_pool = new Array(multiname_count)
 				multiname_pool[0] = Multiname.Any 
@@ -255,7 +236,6 @@ package abc {
 							
 							var qn_ns_index:int = readU30()
 							var qn_s_index:int = readU30()
-							trace('kind is QName', qn_ns_index, qn_s_index)
 							multiname = new Multiname(multiname_kind, namespace_pool[qn_ns_index], string_pool[qn_s_index])
 							break
 						
@@ -292,7 +272,6 @@ package abc {
 						default:
 							throw new VerifyError('Unexpected multiname kind: ' + multiname_kind)
 					}
-					trace('multiname: ', multiname)
 					multiname_pool[i] = multiname
 				}
 			} else {
@@ -302,7 +281,6 @@ package abc {
 		
 		private function _readMethodInfoPool():void {
 			var method_count:int = _abc.method_count = readU30()
-			trace('method_count: ', method_count)
 			if(method_count){
 				method_info_pool = _abc.method_info_pool = new Array(method_count)
 				for(var i:int = 0; i < method_count; i++){
@@ -337,7 +315,6 @@ package abc {
 					
 					var method_info:MethodInfo = new MethodInfo(param_count, return_type, param_types, method_name, method_flags, default_values, param_names)
 					method_info_pool[i] = method_info
-					trace('methodinfo: ', method_info.dump())
 				}
 			} else {
 				method_info_pool = _abc.method_info_pool = new Array()
@@ -346,7 +323,6 @@ package abc {
 		
 		private function _readMetadataPool():void {
 			var metadata_count:int = _abc.metadata_count = readU30()
-			trace('metadata count: ', metadata_count)
 			if(metadata_count){
 				metadata_pool = _abc.metadata_pool = new Array(metadata_count)
 				for(var i:int = 0; i < metadata_count; i++){
@@ -360,7 +336,6 @@ package abc {
 					
 					var metadata:Metadata = new Metadata(meta_name, metadata_data)
 					metadata_pool[i] = metadata
-					trace('metadata: ' + metadata)
 				}
 			} else {
 				metadata_pool = _abc.metadata_pool = new Array()
@@ -369,7 +344,6 @@ package abc {
 		
 		private function _readInstanceInfoPool():void {
 			class_count = _abc.class_count = readU30()
-			trace('class count: ', class_count)
 			
 			if(class_count){
 				instance_info_pool = _abc.instance_info_pool = new Array(class_count)
@@ -395,12 +369,10 @@ package abc {
 					var iinit:MethodInfo = method_info_pool[readU30()]
 					
 					var trait_count:int = readU30()
-					trace('instance trait count: ', trait_count)
 					
 					var traits:Array = _readTraits(trait_count)
 					var instance_info:InstanceInfo = new InstanceInfo(class_instance_name, class_super_name, instance_flags, protectedNs, interfaces, iinit, traits)
 					instance_info_pool[i] = instance_info
-					trace('InstanceInfo: ' + instance_info.dump())
 				}
 			} else {
 				instance_info_pool = _abc.instance_info_pool = new Array
@@ -413,13 +385,11 @@ package abc {
 				for(var i:int = 0; i < class_count; i++){
 					var cinit:MethodInfo = method_info_pool[readU30()]
 					var trait_count:int = readU30()
-					trace('class trait count: , cinit', trait_count, cinit)
 					
 					var traits:Array = _readTraits(trait_count)
 					
 					var class_info:ClassInfo = new ClassInfo(cinit, traits)
 					class_info_pool[i] = class_info
-					trace('ClassInfo: ' + class_info)
 				}
 			} else {
 				class_info_pool = _abc.class_info_pool = new Array
@@ -428,7 +398,6 @@ package abc {
 		
 		private function _readScriptInfoPool():void {
 			var script_count:int = _abc.script_count = readU30()
-			trace('script count: ', script_count)
 			
 			if(script_count){
 				script_info_pool = _abc.script_info_pool = new Array(script_count)
@@ -440,7 +409,6 @@ package abc {
 					
 					var script_info:ScriptInfo = new ScriptInfo(init, traits)
 					script_info_pool[i] = script_info
-					trace('ScriptInfo: ', script_info)
 				}
 			} else {
 				script_info_pool = _abc.script_info_pool = new Array
@@ -449,7 +417,6 @@ package abc {
 		
 		private function _readMethodBodyInfoPool():void {
 			var method_body_info_count:int = _abc.method_body_count = readU30()
-			trace('method body info count: ', method_body_info_count)
 			
 			if(method_body_info_count){ // you'd hope that there'd be at least one in an ABC file =p
 				method_body_info_pool = _abc.method_body_info_pool = new Array(method_body_info_count)
@@ -470,10 +437,8 @@ package abc {
 						var init_pos:int = _bytes.position
 						var bytes_read:int = 0
 						while(bytes_read < code_length){
-							var instr_s:String =  '0x' + (_bytes.position - code_start).toString(16)
 							var instr:Instruction = _readInstr()
 							code.push(instr)
-							trace(instr_s + '  \t' + instr)
 							// instructions are variable-length, and lookupswitch is 'dynamic' because it depends on an operand
 							bytes_read = _bytes.position - init_pos
 						}
@@ -502,7 +467,6 @@ package abc {
 					
 					var method_body_info:MethodBodyInfo = new MethodBodyInfo(method, max_stack, local_count, init_scope_depth, max_scope_depth, code_length, code, exceptions, traits)
 					method_body_info_pool[i] = method_body_info
-					trace('MethodBodyInfo: ', method_body_info)
 				}
 			} else {
 				method_body_info_pool = _abc.method_body_info_pool = new Array

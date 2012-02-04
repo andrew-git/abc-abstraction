@@ -1,13 +1,20 @@
 package abc {
 	import abc.traits.*
 
+	import avmplus.getQualifiedClassName
+
 	/**
 	 * Pretty prints ABC blocks.  Eventually this output should be similar to that of abcdump in Tamarin.
+	 * 
+	 * This is only intended to be human-readable output, but no effort was made to make it hard to parse algorithmically.
+	 * 
 	 */
 	public class ABCInspector {
 		public var _abc:ABC
 		
-		private var s:String
+		private var
+			s:String,
+			_indent:int
 		
 		public function ABCInspector(abc:ABC){
 			this._abc = abc
@@ -15,80 +22,245 @@ package abc {
 		
 		public function get inspect():String {
 			s = ''
+			block(_abc)
+			return s
+		}
+		
+		/**
+		 * Inspects a bytecode block.
+		 */
+		private function block(bc:ABC):void {
+			for(var i:int = bc.script_info_pool.length - 1; i >= 0; i--){
+				script(bc.script_info_pool[i])
+			}
+		}
+		
+		/**
+		 * Inspects a script.
+		 */
+		private function script(si:ScriptInfo):void {
+			// first inspect classes, etc.
+			for each(var t:Trait in si.traits){
+				switch(t.kind){
+					case Trait.Class:
+						klass(t as ClassTrait)
+				}
+			}
+			
+			// then inspect the script itself.  usually this part is less interesting.
+			methodInfo(si.init, new Multiname(Multiname.QName, ABCNamespace.public_ns, '["script init"]'), true, false, false)
+		}
+		
+		private function klass(kt:ClassTrait):void {
+			var ci:ClassInfo = kt.class_info
+			var ii:InstanceInfo = _abc.instance_info_pool[_abc.class_info_pool.indexOf(ci)]
+			line('package {')
+			indent
+			str(indents + 'public class ' + ii.name.name)
+			if(ii.super_name){
+				str(' extends ') // this might not actually be a simple null check (ie, Object is default)
+				fqn(ii.super_name)
+			}
+			
+			// TODO: interfaces, 'implements'
+			indent
+			line(' {')
+			
+			// class body
+			
+			// property declarations
+			// instance
+			for each(var t:Trait in ii.traits){
+				if(t is SlotTrait){
+					property(t, false, true)
+				} else if(t is ConstTrait){
+					property(t, true, true)
+				}
+			}
+			// static
+			for each(t in ci.traits){
+				if(t is SlotTrait){
+					property(t, false, false)
+				} else if(t is ConstTrait){
+					property(t, true, false)
+				}
+			}
+			line()
+			
+			// $iinit
+			'turns out that $iinit is added to the beginning of the constructor'
+			
+			// $cinit
+			methodInfo(ci.cinit, new Multiname(Multiname.QName, ABCNamespace.public_ns, '$cinit'), false, false, false)
+			
+			// constructor
+			methodInfo(ii.iinit, ii.name, true, true, true)
+			
+			// methods
+			for each(t in ii.traits){
+				switch(t.type){
+					case Trait.Method:
+						var mt:MethodTrait = t as MethodTrait
+						methodInfo(mt.method, mt.name, true, true)
+				}
+			}
+			
+			// static methods
+			for each(t in ci.traits){
+				switch(t.type){
+					case Trait.Method:
+						mt = t as MethodTrait
+						methodInfo(mt.method, mt.name, false, true)
+				}
+			}
+			
+			outdent
+			
+			line()
+			str(indents)
+			line('}') // ends class
+			line()
+			outdent
+			line('}') // ends package
+		}
+		
+		private function property(t:Trait, konst:Boolean, instance:Boolean):void {
+			var _t:* = t
+			str(indents)
+			ns(_t.name.ns)
+			instance ? null : str(' static')
+			konst ? str(' var ') : str(' const ')
+			str(_t.name.name)
+			str(':')
+			fqn(_t.type_name)
+			if(_t.value){
+				str(' = ' + literal(_t.value))
+			}
+			line()
+		}
+		
+		private function methodInfo(mi:MethodInfo, name:Multiname, instance:Boolean = true, named:Boolean = true, konstructor:Boolean = false):void {
+			str(indents)
+			
+			if(named){
+				ns(name.ns)
+				if(!instance) str(' static')
+				str(' function ' + name.name + '(')
+				
+				// params
+				if(mi.paramTypes.length > 0){
+					pList(mi)
+				}
+				
+				if(!konstructor){
+					str('):')
+					fqn(mi.returnType)
+				} else {
+					str(')')
+				}
+			} else {
+				if(name){
+					str('/* ' + name + ' */')
+				}
+			}
+			line(' {')
+			
+			indent
+			mbi(mi.body)
+			outdent
+			
+			str(indents)
+			line('}')
+			line()
+		}
+		
+		/**
+		 * print a parameter list
+		 */
+		private function pList(mi:MethodInfo):void {
+			for(var i:int = 0; i < mi.paramTypes.length; i++){
+				if(mi.paramNames[i]){
+					str(mi.paramNames[i])
+				} else {
+					str('param' + i)
+				}
+				str(':')
+				fqn(mi.paramTypes[i])
+				if(mi.defaultValues[i]){
+					str(' = ' + mi.defaultValues[i])
+				}
+				if(i < mi.paramTypes.length - 1) str(', ')
+			}
+			if(mi.needRest){
+				str(', ...rest')
+			}
+		}
+		
+		/**
+		 * Prints a fully-qualified name in the AS3 package style.
+		 * flash.display.Sprite rather than flash.display::Sprite
+		 */
+		private function fqn(m:Multiname):void {
+			if(m.ns != ABCNamespace.public_ns){
+				str(m.ns.name + '.')
+			} else if(m.name == ''){
+				str('*')
+			}
+			str(m.name)
+		}
+		
+		/**
+		 * prints a namespace in the style of an access modifier
+		 */
+		private function ns(n:ABCNamespace):void {
+			if(n == ABCNamespace.public_ns || (n.kind == ABC.PackageNamespace && n.name == '')){
+				str('public')
+			} else {
+				switch(n.kind){
+					case ABC.PackageInternalNs:
+						str('internal')
+						break
+					case ABC.PrivateNs:
+						str('private')
+						break
+					case ABC.ProtectedNamespace:
+						str('protected')
+						break
+					case ABC.StaticProtectedNs:
+						str('protected static')
+						break
+					default:
+						str(n.name)
+				}
+			}
+		}
+		
+		private function mbi(b:MethodBodyInfo):void {
+			if(b){
+				for each(var instr:Instruction in b.code){
+					str(indents) + line(instr)
+				}
+			}
+		}
+		
+		public function get pools():String {
+			s = ''
 			line(_abc.toString())
 			line('ints(' + _abc.int_pool.length + '): {\n\t' + _abc.int_pool.join('\n\t') + '\n}')
 			line('uints(' + _abc.uint_pool.length + '): {\n\t' + _abc.uint_pool.join('\n\t') + '\n}')
 			line('doubles(' + _abc.double_pool.length + '): {\n\t' + _abc.double_pool.join('\n\t') + '\n}')
 			line('Strings(' + _abc.string_pool.length + '): {\n\t"' + _abc.string_pool.join('"\n\t"') + '"\n}')
-			line()
-			
-			if(_abc.script_info_pool.length > 0){
-				line('Scripts', _abc.script_info_pool.length, ':')
-				line(_abc.script_info_pool[_abc.script_info_pool.length - 1])
-			}
-			
-			line('Classes: ', _abc.class_info_pool)
-			
-			for each(var ii:InstanceInfo in _abc.instance_info_pool){
-				str('public class ' + ii.name)
-				if(ii.super_name) str(' extends ' + ii.super_name) // this might not actually be a simple null check (ie, Object is default)
-				
-				// TODO: interfaces, 'implements'
-				
-				line(' {')
-				
-				// class body
-				
-				// constructor
-				str('public function ' + ii.name + '(')
-				if(ii.iinit.paramTypes.length > 0){
-					for each(pType in ii.iinit.paramTypes){
-						str(pType + ', ')
-					}
-				}
-				line('){')
-				if(ii.iinit.body){
-					body = ii.iinit.body
-					for each(instr in body.code) line(instr)
-				}
-				line('\n}')
-				
-				// methods
-				for each(var t:Trait in ii.traits){
-					switch(t.type){
-						case Trait.Method:
-							var mt:MethodTrait = t as MethodTrait
-							str(mt.name.ns.name + ' function ' + mt.name.name + '(')
-							
-							// params
-							if(mt.method.paramTypes.length > 0){
-								for each(var pType:Multiname in mt.method.paramTypes){
-									str(pType + ', ')
-								}
-							}
-							
-							str('):')
-							str(mt.method.returnType)
-							line(' {')
-							
-							// method body
-							if(mt.method.body){
-								var body:MethodBodyInfo = mt.method.body
-								for each(var instr:Instruction in body.code){
-									line(instr)
-								}
-							}
-							
-							line('}')
-					}
-				}
-				
-				line('\n}\n')
-			}
-			
-			line('InstanceInfos: ', _abc.instance_info_pool)
-			
 			return s
+		}
+		
+		/**
+		 * Converts a value into its ActionScript literal form.
+		 */
+		private function literal(val:*):String {
+			if(val is String){
+				return '"' + val + '"'
+			}
+			return val
 		}
 		
 		public function str(...args):void {
@@ -108,6 +280,21 @@ package abc {
 		
 		public function lines(...args):void {
 			s += args.join('\n')
+		}
+		
+		/**
+		 * @return	the actual string of indent characters
+		 */
+		private function get indents():String {
+			return (new Array(_indent + 1)).join('\t')
+		}
+		
+		public function get indent():int {
+			return ++_indent
+		}
+		
+		public function get outdent():int {
+			return --_indent
 		}
 	}
 }
