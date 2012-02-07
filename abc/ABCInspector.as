@@ -48,7 +48,9 @@ package abc {
 			}
 			
 			// then inspect the script itself.  usually this part is less interesting.
-			methodInfo(si.init, new Multiname(Multiname.QName, ABCNamespace.public_ns, '["script init"]'), true, false, false)
+			methodInfo(si.init, new Multiname(Multiname.QName, ABCNamespace.public_ns, '["script init"]'), {
+				instance: true, named: false, konstructor: false
+			})
 		}
 		
 		private function klass(kt:ClassTrait):void {
@@ -96,17 +98,38 @@ package abc {
 			'turns out that $iinit is added to the beginning of the constructor'
 			
 			// $cinit
-			methodInfo(ci.cinit, new Multiname(Multiname.QName, ABCNamespace.public_ns, '$cinit'), false, false, false)
-			
+			methodInfo(ci.cinit, new Multiname(Multiname.QName, ABCNamespace.public_ns, '$cinit'), { 
+				instance: false, named: false, konstructor: false
+			})
+						
 			// constructor
-			methodInfo(ii.iinit, ii.name, true, true, true)
+			methodInfo(ii.iinit, ii.name, {
+				instance: true, named: true, konstructor: true
+			})
 			
 			// methods
 			for each(t in ii.traits){
 				switch(t.type){
 					case Trait.Method:
 						var mt:MethodTrait = t as MethodTrait
-						methodInfo(mt.method, mt.name, true, true)
+						methodInfo(mt.method, mt.name, {
+							instance:true, named: true, konstructor: false
+						})
+						break
+					case Trait.Getter:
+						var gt:GetterTrait = t as GetterTrait
+						methodInfo(gt.method, gt.name, {
+							instance: true, named: true, getter: true
+						})
+						break
+					case Trait.Setter:
+						var st:SetterTrait = t as SetterTrait
+						methodInfo(st.method, st.name, {
+							instance: true, named: true, setter: true
+						})
+						break
+					case Trait.Function:
+						throw 'unhandled FunctionTrait type: ' + t
 				}
 			}
 			
@@ -115,7 +138,9 @@ package abc {
 				switch(t.type){
 					case Trait.Method:
 						mt = t as MethodTrait
-						methodInfo(mt.method, mt.name, false, true)
+						methodInfo(mt.method, mt.name, {
+							instance: false, named: true, konstructor: false
+						})
 				}
 			}
 			
@@ -144,7 +169,15 @@ package abc {
 			line()
 		}
 		
-		private function methodInfo(mi:MethodInfo, name:Multiname, instance:Boolean = true, named:Boolean = true, konstructor:Boolean = false):void {
+		private function methodInfo(mi:MethodInfo, name:Multiname, options:*):void {
+			var
+				instance:Boolean = options['instance'],
+				named:Boolean = options['named'],
+				konstructor:Boolean = options['konstructor'],
+				getter:Boolean = options['getter'],
+				setter:Boolean = options['setter'],
+				func:Boolean = options['func']
+				
 			str(indents)
 			
 			if(named){
@@ -154,7 +187,12 @@ package abc {
 					str('public')
 				}
 				if(!instance) str(' static')
-				str(' function ' + name.name + '(')
+				str(' function ')
+				
+				getter ? str('get ') : null
+				setter ? str('set ') : null
+				
+				str(name.name + '(')
 				
 				// params
 				if(mi.paramTypes.length > 0){
@@ -195,8 +233,8 @@ package abc {
 				}
 				str(':')
 				fqn(mi.paramTypes[i])
-				if(mi.defaultValues[i]){
-					str(' = ' + mi.defaultValues[i])
+				if(mi.defaultValues[i + (mi.paramTypes.length - mi.defaultValues.length)]){
+					str(' = ' + literal(mi.defaultValues[i + (mi.paramTypes.length - mi.defaultValues.length)].value))
 				}
 				if(i < mi.paramTypes.length - 1) str(', ')
 			}

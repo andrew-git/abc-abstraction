@@ -392,7 +392,7 @@ package swf {
 		 * Clears variable data and logs an error
 		 * message.
 		 */
-		private function parseError(message:String = "Unkown error."):void {
+		private function parseError(message:String = "Unknown error."):void {
 			compressed				= false
 			version					= 0
 			fileSize				= 0
