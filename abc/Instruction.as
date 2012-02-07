@@ -13,7 +13,7 @@ package abc {
 		public function toString():String {
 			var s:String = opcodes[opcode].name
 			if(operands){
-				s += '\t' + operands.join(', ')
+				s += (new Array(16 - s.length).join(' ')) + operands.join(', ')
 			}
 			return s
 		}
