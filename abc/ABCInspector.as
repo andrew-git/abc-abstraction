@@ -44,6 +44,25 @@ package abc {
 				switch(t.type){
 					case Trait.Class:
 						klass(t as ClassTrait)
+						break
+					case Trait.Method: // package function
+						indent
+						str('package ')
+						var mt:MethodTrait = t as MethodTrait
+						if(mt.name.ns != ABCNamespace.public_ns){
+							ns(mt.name.ns)
+							str(' ')
+						}
+						line('{')
+						methodInfo(mt.method, mt.name, {
+							instance: true, named: true, konstructor: false
+						})
+						outdent
+						line('}')
+						break
+
+					default:
+						break;
 				}
 			}
 			
@@ -56,6 +75,7 @@ package abc {
 		private function klass(kt:ClassTrait):void {
 			var ci:ClassInfo = kt.class_info
 			var ii:InstanceInfo = _abc.instance_info_pool[_abc.class_info_pool.indexOf(ci)]
+						
 			str('package ')
 			if(ii.name.ns != ABCNamespace.public_ns){
 				ns(ii.name.ns)
@@ -176,13 +196,14 @@ package abc {
 				konstructor:Boolean = options['konstructor'],
 				getter:Boolean = options['getter'],
 				setter:Boolean = options['setter'],
-				func:Boolean = options['func']
+				func:Boolean = options['func'],
+				nested:Boolean = options['nested']
 				
 			str(indents)
 			
 			if(named){
 				if(!konstructor){
-					ns(name.ns)
+					if(!nested) ns(name.ns)
 				} else {
 					str('public')
 				}
@@ -286,6 +307,14 @@ package abc {
 			if(b){
 				for each(var instr:Instruction in b.code){
 					str(indents) + line(instr)
+					if(instr.opcode == Op.newfunction){ // nested function
+						var mi:MethodInfo = instr.operands[0]
+						indent
+						methodInfo(mi, new Multiname(Multiname.QName, null, mi.name), {
+							instance: true, named: true, konstructor: false, nested: true
+						})
+						outdent
+					}
 				}
 			}
 		}
