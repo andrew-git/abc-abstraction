@@ -118,6 +118,7 @@ package abc {
 			convert_d			:int = 0x75,
 			convert_b			:int = 0x76,
 			convert_o			:int = 0x77,
+			checkfilter			:int = 0x78,
 			coerce				:int = 0x80,
 			coerce_b			:int = 0x81,
 			coerce_a			:int = 0x82,

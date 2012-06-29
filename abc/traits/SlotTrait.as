@@ -17,5 +17,9 @@ package abc.traits {
 			value = args[2]
 			value_kind = args[3]
 		}
+		
+		public function toString():String {
+			return '[SlotTrait #' + slot_id + ' ' + name + ']'
+		}
 	}
 }

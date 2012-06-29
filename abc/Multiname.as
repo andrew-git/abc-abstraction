@@ -1,6 +1,8 @@
 package abc {
 	import flash.utils.*
 	
+	import flashx.textLayout.formats.BackgroundColor;
+
 	public class Multiname {
 		public static const 
 			QName			:int	= 0x07,
@@ -28,7 +30,7 @@ package abc {
 		
 		public var kind:int
 		public var ns:ABCNamespace
-		public var name:String
+		public var name:*
 		public var nsSet:Array
 		public var typeName:abc.Multiname
 		public var params:Array
@@ -74,6 +76,23 @@ package abc {
 			}
 		}
 		
+		public function eq(mn:abc.Multiname):Boolean {
+			if(mn.kind == kind){
+				if(mn.kind == QName){
+					if(mn.ns.kind == ns.kind && mn.ns.name == ns.name && mn.name == name){
+						return true
+					} else {
+						return false
+					}
+				} else {
+					throw 'eq not yet designed for other multiname types'
+				}
+			} else {
+				return false
+			}
+			return false
+		}
+		
 		public function toString():String {
 			if(kind == QName){
 				return ns.toString() + '::' + name
@@ -81,6 +100,8 @@ package abc {
 				return typeName + '.<' + params.join(', ') + '>'
 			} else if(kind == abc.Multiname.Multiname){
 				return '[' + nsSet.join(', ') + ']::' + name
+			} else if(kind == abc.Multiname.MultinameL){
+				return '[' + nsSet.join(', ') + ']::[*late*]'
 			}
 			return '[Multiname ' + kindMap[kind] + ']'
 		}

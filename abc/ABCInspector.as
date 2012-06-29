@@ -13,7 +13,7 @@ package abc {
 		public var _abc:ABC
 		
 		private var
-			s:String,
+			s:String = '',
 			_indent:int
 		
 		public function ABCInspector(abc:ABC){
@@ -67,7 +67,7 @@ package abc {
 			}
 			
 			// then inspect the script itself.  usually this part is less interesting.
-			methodInfo(si.init, new Multiname(Multiname.QName, ABCNamespace.public_ns, '["script init"]'), {
+			methodInfo(si.init, new Multiname(Multiname.QName, ABCNamespace.public_ns, 'global$init'), {
 				instance: true, named: false, konstructor: false
 			})
 		}
@@ -317,6 +317,14 @@ package abc {
 					}
 				}
 			}
+		}
+		
+		public function inspectMBI(b:MethodBodyInfo):String {
+			s = ''
+			mbi(b)
+			var temp:String = s
+			s = ''
+			return temp
 		}
 		
 		public function get pools():String {

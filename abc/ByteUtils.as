@@ -15,7 +15,7 @@ package abc {
 		 * Reads a 24-bit / 3-byte, signed integer from the ABC file.  Used by some (annoying) AVM2 instructions.
 		 */
 		public static function readS24(bytes:ByteArray):int {
-			var result:int = bytes.readByte() | (bytes.readByte() << 8) | (bytes.readByte() << 16)
+			var result:int = bytes.readUnsignedByte() | (bytes.readUnsignedByte() << 8) | (bytes.readByte() << 16)
 			return result
 		}
 		
@@ -138,7 +138,7 @@ package abc {
 			var max:int = Math.max(Math.abs(left), Math.abs(right), Math.abs(top), Math.abs(bottom))
 			
 			var nBits:uint = Math.max(Math.ceil(Math.log(max) / Math.LN2), 1) + 1 // 1 extra for sign?
-			trace('nBits: ', nBits, left, right, top, bottom)
+			//trace('nBits: ', nBits, left, right, top, bottom)
 			writeBits(bytes, nBits, 5)
 			writeBits(bytes, left, nBits)
 			writeBits(bytes, right, nBits)

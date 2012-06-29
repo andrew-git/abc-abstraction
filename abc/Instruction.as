@@ -1,7 +1,9 @@
 package abc {
 	public class Instruction {
 		public var	opcode:int,
-					operands:Array
+					operands:Array,
+					addr:uint,
+					size:uint // # bytes instruction took up when it was read
 					
 		public var used:Boolean = false
 					

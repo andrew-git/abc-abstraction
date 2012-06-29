@@ -6,8 +6,11 @@ package abc {
 	 * Encodes an ABC instance as a ByteArray.
 	 */
 	public class ABCWriter {
-		private var _abc:ABC
-		private var _bytes:ByteArray
+		private var
+			_abc:ABC,
+			_bytes:ByteArray,
+			_offsetEntries:Array = [],
+			_rawABC:Boolean
 		
 		private var	_estObjs:Dictionary = new Dictionary(true),
 					_estInts:Array = [],
@@ -15,8 +18,9 @@ package abc {
 					_estDoubles:Array = [],
 					_estStrings:Object = {}
 		
-		public function ABCWriter(abc:ABC){
+		public function ABCWriter(abc:ABC, rawABC:Boolean = false){
 			_abc = abc
+			_rawABC = rawABC
 		}
 		
 		public function toByteArray():ByteArray {
@@ -484,9 +488,9 @@ package abc {
 		}
 		
 		private function _write():void {
-			trace('starting write')
+			//trace('starting write')
 			_bytes = new ByteArray
-			
+			_bytes.endian = Endian.LITTLE_ENDIAN // for avmshell/rawabc
 			/*if(_abc.abcname){
 				_bytes.writeUnsignedInt(_abc.flags)
 				trace(_bytes.position)
@@ -498,25 +502,26 @@ package abc {
 			
 			//_writeU16(_abc.minor_version)
 			//_writeU16(_abc.major_version)
-			_bytes.writeByte(0x0)
-			_bytes.writeByte(0x10)
-			_bytes.writeByte(0x0)
-			_bytes.writeByte(0x2e)
-			//_bytes.writeShort(_abc.minor_version)
-			//_bytes.writeShort(_abc.major_version)
+			//_bytes.writeByte(0x0)
+			//_bytes.writeByte(0x10)
+			//_bytes.writeByte(0x0)
+			//_bytes.writeByte(0x2e)
+			_bytes.writeShort(_abc.minor_version)
+			_bytes.writeShort(_abc.major_version)
 			
-			_bytes.writeByte(0) // appears to be unused (?)
+			if(!_rawABC) _bytes.writeByte(0) // appears to be unused (?)
 			
 			// constant pool
-			trace('starting constant')
+			//trace('starting constant')
 			_writeConstantPool()
 			
-			trace('starting rest')
+			//trace('starting rest')
 			_writeRest()
+			_bytes.position = 0
 		}
 		
 		private function _writeConstantPool():void {
-			trace('int pool')
+			//trace('int pool')
 			// int pool
 			var int_count:int = _abc.int_pool.length
 			if(int_count <= 1){
@@ -529,7 +534,7 @@ package abc {
 				}
 			}
 			
-			trace('uints')
+			//trace('uints')
 			// uint pool
 			var uint_count:int = _abc.uint_pool.length
 			if(uint_count <= 1){
@@ -569,7 +574,7 @@ package abc {
 					_bytes.writeUTFBytes(str)
 				}
 			}
-			trace('namespaces')
+			//trace('namespaces')
 			
 			var namespace_count:int = _abc.namespace_pool.length
 			if(namespace_count <= 1){
@@ -580,11 +585,11 @@ package abc {
 				for(i = 1; i < namespace_count; i++){
 					var namespace:ABCNamespace = namespace_pool[i]
 					_bytes.writeByte(namespace.kind)
-					if(namespace.name == '' && namespace.kind == ABC.PackageNamespace){
-						_writeU30(1)
-					} else {
+					//if(namespace.name == '' && namespace.kind == ABC.PackageNamespace){
+					//	_writeU30(2)
+					//} else {
 						_writeU30(_abc.string_pool.indexOf(namespace.name))
-					}
+					//}
 				}
 			}
 			
@@ -602,7 +607,7 @@ package abc {
 				}
 			}
 			
-			trace('multinames')
+			//trace('multinames')
 			var multiname_count:int = _abc.multiname_pool.length
 			if(multiname_count <= 1){
 				_writeU30(0)
@@ -741,20 +746,21 @@ package abc {
 			for(i = 0; i < method_body_info_count; i++){
 				var mbi:MethodBodyInfo = _abc.method_body_info_pool[i]
 				
-				trace('walking MBI')
 				_walkBytecode(mbi)
 				
 				_writeU30(_abc.method_info_pool.indexOf(mbi.method))
-				_writeU30(mbi.max_stack)
+				_writeU30(mbi.max_stack + 4) // TODO: Obviously this is calculated incorrectly, but +4 helps for now.
 				_writeU30(mbi.local_count)
 				_writeU30(mbi.init_scope_depth)
 				_writeU30(mbi.max_scope_depth)
 				
 				// instrs need to be written into a separate ByteArray first, so that the size is known for mbi.code_length
-				var instrBytes:ByteArray = new ByteArray()
+				var instrBytes:ByteArray = new ByteArray
 				for(j = 0; j < mbi.code.length; j++){
 					_writeInstr(instrBytes, mbi.code[j])
 				}
+				
+				_writeOffsets(instrBytes)
 				
 				_writeU30(instrBytes.length)
 				
@@ -804,11 +810,12 @@ package abc {
 			
 			// TODO: init_scope_depth is probably the max_scope of the lexically enclosing parent method
 			mbi.max_scope_depth = max_scope
-			mbi.max_stack = max_stack
+			mbi.max_stack = max_stack + 1 // added 6.6.12, due to a constructor with "throw function(){ return function(){ return this }() }"
 			mbi.local_count = max_register + 2
 		}
 		
 		private function _writeInstr(bytes:ByteArray, instr:Instruction):void {
+			instr.addr = bytes.position
 			var opcode:int = instr.opcode
 			var operands:Array = instr.operands
 			bytes.writeByte(opcode)
@@ -873,9 +880,11 @@ package abc {
 					ByteUtils.writeU30(bytes, _abc.instance_info_pool.indexOf(operands[0]))
 					break
 				case Op.lookupswitch:
-					ByteUtils.writeS24(bytes, operands[0])
+					_writeOffsetLater(bytes.position, operands[0], instr.addr)
+					ByteUtils.writeS24(bytes, 0)
 					ByteUtils.writeU30(bytes, operands.length - 3)
 					for(var i:int = 2; i < operands.length; i++){
+						_writeOffsetLater(bytes.position, operands[i], instr.addr)
 						ByteUtils.writeS24(bytes, operands[i])
 					}
 					break
@@ -887,7 +896,9 @@ package abc {
 				case Op.ifle:       case Op.ifnle:
 				case Op.iflt:       case Op.ifnlt:
 				case Op.ifstricteq: case Op.ifstrictne:
-					ByteUtils.writeS24(bytes, operands[0])
+					// TODO: operands[0] is now an Instruction reference, so this becomes more complicated
+					if(operands[0] is Instruction) _writeOffsetLater(bytes.position, operands[0], instr.addr + 4) // + 4 because this offset is relative to the next instr
+					ByteUtils.writeS24(bytes, 0) // just fill up the space
 					break
 				
 				case Op.inclocal:
@@ -939,6 +950,39 @@ package abc {
 					// no operands
 					break
 			}
+		}
+		
+		/**
+		 * Stores information about where a jump/branch instruction's operand is stored, 
+		 * for later use by _writeOffsets.
+		 * 
+		 * @param	position	The location in the ByteArray where 3 bytes should be written as the offset.
+		 * @param	instr		The instruction that is the target of the jump.  Its address isn't yet known.
+		 * @param	baseAddr	In bytes, the base address used for this type of instruction. 
+		 */
+		private function _writeOffsetLater(position:uint, instr:Instruction, baseAddr:uint):void {
+			_offsetEntries.push({ position: position, instr: instr, baseAddr: baseAddr })
+		}
+		
+		/**
+		 * Jump/branch instructions need to know the byte offset of their target(s) 
+		 * from the current instruction.  This can't easily be known until those other 
+		 * instructions are written to a ByteArray, so this function takes stored 
+		 * information about where to write the 3 bytes of the s24 that holds the offset 
+		 * in the original branch instruction.  
+		 * 
+		 * @param	instrBytes	Method bodies use a separate ByteArray, so it needs to be supplied.
+		 */
+		private function _writeOffsets(instrBytes:ByteArray):void {
+			var initPos:uint = instrBytes.position
+			
+			for each(var entry:Object in _offsetEntries){
+				instrBytes.position = entry.position
+				ByteUtils.writeS24(instrBytes, entry.instr.addr - entry.baseAddr)
+			}
+			
+			_offsetEntries.length = 0
+			instrBytes.position = initPos
 		}
 		
 		private function _writeTraits(ts:Array):void {

@@ -15,7 +15,9 @@ package abc {
 		private var currentByte:int // used in bit reading
 		private var bitPosition:int // used in bit reading
 		
-		private var _isSWF:Boolean
+		private var
+			_isSWF:Boolean,
+			rawABC:Boolean
 		
 		private var class_count:int
 		
@@ -41,8 +43,13 @@ package abc {
 		
 		public var doABC:ByteArray
 		
-		public function ABCReader(bytes:ByteArray){
+		/**
+		 * 
+		 * @param	rawABC		If this argument is true, then slightly different ABC reading semantics are used.
+		 */
+		public function ABCReader(bytes:ByteArray, rawABC:Boolean = false){
 				bytes.position = 0
+				this.rawABC = rawABC
 				_parseABC(bytes)
 		}
 		
@@ -84,12 +91,16 @@ package abc {
 				_abc.abcname = abcname
 			}
 			
+			bytes.endian = Endian.LITTLE_ENDIAN
+			
 			var minor:uint = _bytes.readUnsignedShort()
 			var major:uint = _bytes.readUnsignedShort()
 			_abc.major_version = major
 			_abc.minor_version = minor
+			
+			//trace('abcVersion', _abc.major_version, _abc.minor_version, flags, abcname)
 
-			_bytes.readByte() // wasting this byte
+			if(!rawABC) _bytes.readByte() // wasting this byte
 			_readConstantPool()			// cpool_info		constant_pool
 			_readMethodInfoPool()		// method_info		method[method_count]
 			_readMetadataPool()			// metadata_info	metadata[metadata_count]
@@ -147,12 +158,12 @@ package abc {
 				// read double pool
 				double_pool = _abc.double_pool = new Array(double_count)
 				double_pool[0] = 0
-				
+				var old_endian:String = _bytes.endian
+				_bytes.endian = Endian.LITTLE_ENDIAN
 				for(var i:int = 1; i < double_count; i++){
-					_bytes.endian = Endian.LITTLE_ENDIAN
 					double_pool[i] = _bytes.readDouble()
-					_bytes.endian = Endian.BIG_ENDIAN
 				}
+				_bytes.endian = old_endian
 			} else {
 				double_pool = _abc.double_pool = [0]
 			}
@@ -161,8 +172,8 @@ package abc {
 		private function _readStringPool():void {
 			var string_count:int = _abc.string_count = readU30()
 			if(string_count){
-				string_pool = _abc.string_pool = new Array(string_count)
-				string_pool[0] = ''
+				string_pool = _abc.string_pool = ['\0']
+				//string_pool[0] = ''
 				
 				for(var i:int = 1; i < string_count; i++){
 					// parse the string_info struct
@@ -434,13 +445,61 @@ package abc {
 					if(code_length){
 						var code:Array = new Array()
 						
+						var addrs:Array = []
 						var init_pos:int = _bytes.position
 						var bytes_read:int = 0
 						while(bytes_read < code_length){
+							var instr_addr:uint = _bytes.position - code_start
 							var instr:Instruction = _readInstr()
+							instr.addr = instr_addr
+							instr.size = (_bytes.position - code_start) - instr_addr
+							addrs.push(instr_addr)
 							code.push(instr)
 							// instructions are variable-length, and lookupswitch is 'dynamic' because it depends on an operand
 							bytes_read = _bytes.position - init_pos
+						}
+						
+						/*
+							Change the targets of jump/branch instructions to be relative instr indices, rather 
+							than byte offsets, so that they're more abstract jumps.  It needs to be done here 
+							rather than in readInstr because forward jumps don't yet have known indices.
+						*/
+						
+						for(j = 0; j < code.length; j++){
+							instr = code[j]
+							switch(instr.opcode){
+								case Op.jump:
+								case Op.iftrue:     case Op.iffalse:
+								case Op.ifeq:       case Op.ifne:
+								case Op.ifge:       case Op.ifnge:
+								case Op.ifgt:       case Op.ifngt:
+								case Op.ifle:       case Op.ifnle:
+								case Op.iflt:       case Op.ifnlt:
+								case Op.ifstricteq: case Op.ifstrictne:
+									var offset:int = instr.operands[0]
+									var new_addr:int = (instr.addr + instr.size) + offset
+									var offset_index:int = addrs.indexOf(new_addr)
+									if(offset_index == -1){
+										//throw 'Invalid offset in jump/branch instruction'
+										instr.operands[0] = '[~~Invalid offset ' + offset  + ' ~~ ' + new_addr + ']'
+										break
+									}
+									/*
+										This re-assignment has consequences for ABCWriter, since it will need to recalculate 
+										the offsets to be byte offsets again when writing, rather than blindly writing the value.
+									*/
+									instr.operands[0] = code[offset_index]
+									break
+								case Op.lookupswitch:
+									var default_offset:int = instr.operands[0]
+									var default_offset_index:int = addrs.indexOf(instr.addr + default_offset)
+									instr.operands[0] = code[default_offset_index]
+									for(var k:int = 2; k < instr.operands.length; k++){ // 2 skips default_offset and case_count
+										var cur_offset:int = instr.operands[k]
+										var cur_offset_index:int = addrs.indexOf(instr.addr + cur_offset)
+										instr.operands[k] = code[cur_offset_index]
+									}
+							}
 						}
 					}
 					
@@ -831,7 +890,7 @@ package abc {
 		 * Reads a 24-bit / 3-byte, signed integer from the ABC file.  Used by some (annoying) AVM2 instructions.
 		 */
 		private function readS24():int {
-			var result:int = _bytes.readByte() | (_bytes.readByte() << 8) | (_bytes.readByte() << 16)
+			var result:int = _bytes.readUnsignedByte() | (_bytes.readUnsignedByte() << 8) | (_bytes.readByte() << 16)
 			return result
 		}
 		
