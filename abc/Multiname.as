@@ -1,7 +1,5 @@
 package abc {
 	import flash.utils.*
-	
-	import flashx.textLayout.formats.BackgroundColor;
 
 	public class Multiname {
 		public static const 
