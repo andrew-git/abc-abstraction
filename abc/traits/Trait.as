@@ -73,7 +73,6 @@ package abc.traits {
 			type = typeFromKind(kind)
 			attr = (kind & 0xf0) >> 4 // upper 4 bits
 			metadata = []
-			trace('!!new', this)
 		}
 		
 		public function fastInit(...args):void {
