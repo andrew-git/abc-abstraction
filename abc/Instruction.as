@@ -212,6 +212,7 @@ package abc {
 		public static var opcodeList:Array = [
 			{ name: 'add',						opcode: 0xa0, operands: 0, stack: -1, scope:  0 },
 			{ name: 'add_i',					opcode: 0xc5, operands: 0, stack: -1, scope:  0 },
+			{ name: 'applytype',				opcode: 0x53, operands: 1, stack:  0, scope:  0 },
 			{ name: 'astype',					opcode: 0x86, operands: 1, stack:  0, scope:  0 },
 			{ name: 'astypelate',				opcode: 0x87, operands: 0, stack: -1, scope:  0 },
 			{ name: 'bitand',					opcode: 0xa8, operands: 0, stack: -1, scope:  0 },
@@ -352,6 +353,7 @@ package abc {
 			{ name: 'swap',						opcode: 0x2b, operands: 0, stack:  0, scope:  0 },
 			{ name: 'throw',					opcode: 0x03, operands: 0, stack: -1, scope:  0 },
 			{ name: 'typeof',					opcode: 0x95, operands: 0, stack:  0, scope:  0 },
+			{ name: 'timestamp',				opcode: 0xF3, operands: 0, stack:  0, scope:  0 },
 			{ name: 'urshift',					opcode: 0xa7, operands: 0, stack: -1, scope:  0 },
 			
 			{ name: 'applytype',				opcode: 0x53, operands: 1, stack:  0, scope:  0 } // TODO: this

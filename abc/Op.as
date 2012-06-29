@@ -178,7 +178,8 @@ package abc {
 			debug				:int = 0xEF,
 			debugline			:int = 0xF0,
 			debugfile			:int = 0xF1,
-			bkptline			:int = 0xF2
+			bkptline			:int = 0xF2,
+			timestamp			:int = 0xF3
 		
 		public function Op(){
 			
