@@ -464,7 +464,7 @@ package abc {
 							than byte offsets, so that they're more abstract jumps.  It needs to be done here 
 							rather than in readInstr because forward jumps don't yet have known indices.
 						*/
-						
+						var new_instr:Instruction
 						for(j = 0; j < code.length; j++){
 							instr = code[j]
 							switch(instr.opcode){
@@ -484,11 +484,9 @@ package abc {
 										instr.operands[0] = '[~~Invalid offset ' + offset  + ' ~~ ' + new_addr + ']'
 										break
 									}
-									/*
-										This re-assignment has consequences for ABCWriter, since it will need to recalculate 
-										the offsets to be byte offsets again when writing, rather than blindly writing the value.
-									*/
-									instr.operands[0] = code[offset_index]
+									
+									instr.operands[0] = new_instr = code[offset_index]
+									new_instr.needsLabel = true
 									break
 								case Op.lookupswitch:
 									var default_offset:int = instr.operands[0]
@@ -497,7 +495,8 @@ package abc {
 									for(var k:int = 2; k < instr.operands.length; k++){ // 2 skips default_offset and case_count
 										var cur_offset:int = instr.operands[k]
 										var cur_offset_index:int = addrs.indexOf(instr.addr + cur_offset)
-										instr.operands[k] = code[cur_offset_index]
+										instr.operands[k] = new_instr = code[cur_offset_index]
+										new_instr.needsLabel = true
 									}
 							}
 						}

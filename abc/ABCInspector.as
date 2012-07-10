@@ -311,7 +311,14 @@ package abc {
 		
 		private function mbi(b:MethodBodyInfo):void {
 			if(b){
-				for each(var instr:Instruction in b.code){
+				var labelCount:uint = 0
+				for each(var instr:Instruction in b.code) if(instr.needsLabel) instr.label = (labelCount++).toString()
+				for each(instr in b.code){
+					if(instr.needsLabel){
+						line()
+						str(indents)
+						line('<' + instr.label + '>:')
+					}
 					str(indents) + line(instr)
 					if(instr.opcode == Op.newfunction){ // nested function
 						var mi:MethodInfo = instr.operands[0]

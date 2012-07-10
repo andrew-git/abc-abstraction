@@ -3,7 +3,9 @@ package abc {
 		public var	opcode:int,
 					operands:Array,
 					addr:uint,
-					size:uint // # bytes instruction took up when it was read
+					size:uint, // # bytes instruction took up when it was read
+					needsLabel:Boolean,
+					label:String
 					
 		public var used:Boolean = false
 					
@@ -14,8 +16,13 @@ package abc {
 		
 		public function toString():String {
 			var s:String = opcodes[opcode].name
+
 			if(operands){
-				s += (new Array(16 - s.length).join(' ')) + operands.join(', ')
+				s += (new Array(16 - s.length).join(' '))
+				if(operands[0] is Instruction && operands[0].label){
+					s += '<' + operands[0].label + '> '
+				}
+				s += operands.join(', ')
 			}
 			return s
 		}
