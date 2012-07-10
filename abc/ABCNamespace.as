@@ -28,6 +28,7 @@ package abc {
 		}
 		
 		public function toString():String {
+			var name:* = this.name == '\0' ? '' : this.name
 			switch(kind){
 				case ABC.Namespace:
 					return '[namespace]::' + name

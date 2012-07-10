@@ -27,6 +27,12 @@ package swf.tags {
 				case DoABC:
 					tag = new DoABCTag
 					break
+				case DoABC2:
+					tag = new DoABC2Tag
+					break
+				case DoAction:
+					tag = new DoActionTag
+					break
 				case ScriptLimits:
 					tag = new ScriptLimitsTag
 					break
@@ -67,7 +73,9 @@ package swf.tags {
 			DefineShape2		:uint = 22,
 			DefineShape3		:uint = 32,
 			DefineShape4		:uint = 83,
-			DoABC				:uint = 82,
+			DoABC				:uint = 72,
+			DoABC2				:uint = 82,
+			DoAction			:uint = 12,
 			DefineBinaryData	:uint = 87,
 			SymbolClass			:uint = 76
 	}

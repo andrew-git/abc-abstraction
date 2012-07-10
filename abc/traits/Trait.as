@@ -56,6 +56,7 @@ package abc.traits {
 					break
 				
 				default:
+					throw 'Unhandled trait kind: ' + kind
 					break
 			}
 			return null;

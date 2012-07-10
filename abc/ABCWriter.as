@@ -12,11 +12,12 @@ package abc {
 			_offsetEntries:Array = [],
 			_rawABC:Boolean
 		
-		private var	_estObjs:Dictionary = new Dictionary(true),
-					_estInts:Array = [],
-					_estUints:Array = [],
-					_estDoubles:Array = [],
-					_estStrings:Object = {}
+		private var
+			_estObjs:Dictionary = new Dictionary(true),
+			_estInts:Array = [],
+			_estUints:Array = [],
+			_estDoubles:Array = [],
+			_estStrings:Object = {}
 		
 		public function ABCWriter(abc:ABC, rawABC:Boolean = false){
 			_abc = abc

@@ -4,19 +4,17 @@ package swf.tags {
 	import flash.utils.*
 	
 	/**
-	 * Represents the DoABC2 tag in the SWF format.
+	 * Represents the DoABC tag in the SWF format.
 	 */
 	public class DoABCTag extends Tag {
-		public var 
-			flags	:uint,
+		public var
 			name	:String
-		private var
+		protected var
 			_abc	:ABC
 		
-		public function DoABCTag(flags:uint = 0, name:String = '', abc:ABC = null){
-			super(Tag.DoABC)
-			this.flags = flags
-			this.name = name
+		public function DoABCTag(abc:ABC = null){
+			super(this is DoABC2Tag ? Tag.DoABC2 : Tag.DoABC)
+			this.name = 'DoABC'
 			_abc = abc
 		}
 		
@@ -28,25 +26,19 @@ package swf.tags {
 			_abc = abc
 		}
 		
-		override public function readFrom(reader:SWFReader, length:uint):void {
-			var startPos:int = reader.bytes.position
-			flags = reader.readBits(32)
-			name = reader.readString()
-			
+		override public function readFrom(reader:SWFReader, length:uint):void {			
 			// make a new ByteArray with just the abcfile
 			var abcBytes:ByteArray = new ByteArray
-			reader.bytes.readBytes(abcBytes, 0, length - (reader.bytes.position - startPos))
+			abcBytes.endian = Endian.LITTLE_ENDIAN
+			reader.bytes.readBytes(abcBytes, 0, length)
 			abcBytes.position = 0
-			_abc = ABC.readFrom(abcBytes)
-			_abc.flags = flags
-			_abc.abcname = name
+			_abc = new ABCReader(abcBytes, true).abc
+			_abc.abcname = 'DoABC'
 		}
 		
 		override public function toByteArray():ByteArray {
 			var bytes:ByteArray = new ByteArray
 			bytes.endian = Endian.LITTLE_ENDIAN
-			bytes.writeUnsignedInt(flags)
-			bytes.writeUTFBytes(name)
 			bytes.writeBytes(ABCWriter.writeABC(_abc))
 			return bytes
 		}

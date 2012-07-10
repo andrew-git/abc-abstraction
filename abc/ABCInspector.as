@@ -179,7 +179,7 @@ package abc {
 			str(indents)
 			ns(_t.name.ns)
 			instance ? null : str(' static')
-			konst ? str(' var ') : str(' const ')
+			konst ? str(' const ') : str(' var ')
 			str(_t.name.name)
 			str(':')
 			fqn(_t.type_name)
@@ -269,6 +269,12 @@ package abc {
 		 * flash.display.Sprite rather than flash.display::Sprite
 		 */
 		private function fqn(m:Multiname):void {
+			if(m.kind == Multiname.TypeName){
+				str('Vector.<')
+				fqn(m.params[0])
+				str('>')
+				return
+			}
 			if(m.ns != ABCNamespace.public_ns){
 				if(m.ns) str(m.ns.name + '.') // FIXME: Why was m.ns null here?
 			} else if(m.name == ''){

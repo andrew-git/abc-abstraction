@@ -208,7 +208,8 @@ package swf {
 		private const TAG_ID_SHAPE_4:uint		= 83
 		
 		// tags defined by Krilnon
-		private const TAG_ID_DO_ABC:uint		= 82
+		private const TAG_ID_DO_ABC:uint		= 72
+		private const TAG_ID_DO_ABC_2:uint		= 82
 		private const TAG_ID_DEFINE_BINARY_DATA:uint = 87
 		
 		private var _swf:SWF
