@@ -19,7 +19,7 @@ package swf.tags {
 		
 		override public function toByteArray():ByteArray {
 			var bytes:ByteArray = new ByteArray
-			bytes.writeUTFBytes(metadata.toXMLString())
+			if(metadata) bytes.writeUTFBytes(metadata.toXMLString())
 			return bytes
 		}
 	}

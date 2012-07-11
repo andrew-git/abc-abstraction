@@ -75,6 +75,10 @@ package abc {
 			return '[ABC ' + abcname + ' (' + length + ' bytes, ' + method_body_info_pool.length + ' functions)]'
 		}
 		
+		public function get inpect():String {
+			return new ABCInspector(this).inspect
+		}
+		
 		public function get constant_pool():Array {
 			return null // or object with named field for each type of pool
 		}
